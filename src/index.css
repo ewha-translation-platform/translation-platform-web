@@ -1,3 +1,62 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap");
+
+:root {
+  --navbar-height: 56px;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  #root {
+    @apply min-h-screen bg-neutral-100;
+  }
+
+  h1 {
+    @apply text-2xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold;
+  }
+
+  h3 {
+    @apply text-lg font-semibold;
+  }
+
+  mark {
+    @apply rounded-md;
+  }
+
+  select,
+  textarea,
+  input {
+    @apply p-2 rounded-md border border-primary focus:border-primary focus:ring-primary;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply py-2 px-4 rounded-md font-semibold text-lg cursor-pointer transition-all;
+  }
+  .btn-sm {
+    @apply p-1 rounded-sm cursor-pointer transition-all;
+  }
+  .btn-icon {
+    @apply h-8 w-8 p-1 rounded-full cursor-pointer transition-all;
+  }
+}
+
+@layer utilities {
+  .hidden-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hidden-scrollbar::webkit-scrollbar {
+    display: none;
+  }
+  :disabled {
+    @apply opacity-30 cursor-default;
+  }
+}
