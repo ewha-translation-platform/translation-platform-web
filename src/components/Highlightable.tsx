@@ -1,11 +1,4 @@
-import {
-  BaseSyntheticEvent,
-  DetailedHTMLProps,
-  HTMLAttributes,
-  ReactNode,
-  useMemo,
-  useRef,
-} from "react";
+import { ReactNode, useMemo, useRef } from "react";
 import colorScheme from "../utils/colorScheme";
 
 type HighlightableProps = {

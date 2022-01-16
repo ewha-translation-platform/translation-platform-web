@@ -1,7 +1,5 @@
-import chroma from "chroma-js";
 import { GroupBase } from "react-select";
 import Creatable, { CreatableProps } from "react-select/creatable";
-import colorScheme from "../../utils/colorScheme";
 
 function CreatableSelect(
   props: CreatableProps<

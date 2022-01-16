@@ -1,7 +1,4 @@
-import { useContext } from "react";
 import { NavLink } from "react-router-dom";
-
-import UserContext from "../contexts/UserContext";
 
 function StyledNavLink(props: { to: string; label: string }) {
   return (
@@ -19,7 +16,7 @@ function StyledNavLink(props: { to: string; label: string }) {
 }
 
 function Sidebar() {
-  const { user } = useContext(UserContext);
+  // const { user } = useContext(UserContext);
 
   return (
     <nav

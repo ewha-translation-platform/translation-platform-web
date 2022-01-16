@@ -31,7 +31,7 @@ function AssignmentForm() {
     if (assignmentId !== "new") {
       assignmentService.getOne(+assignmentId!).then(reset);
     }
-  }, [assignmentId, setValue]);
+  }, [assignmentId, setValue, reset]);
 
   const onSubmit: SubmitHandler<AssignmentDto> = (data) => {
     assignmentService.postOne(data).then(() => navigate(".."));
@@ -66,7 +66,7 @@ function AssignmentForm() {
         reader.readAsText(file);
       }
     },
-    []
+    [setValue]
   );
 
   return (

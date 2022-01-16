@@ -3,7 +3,7 @@ import { feedbackService } from "./feedbackService";
 import { feedbacks } from "./feedbackService";
 import { users } from "./userService";
 
-export default {
+const submissionService = {
   async getAll(): Promise<Submission[]> {
     return Promise.all(
       submissions.map(
@@ -44,6 +44,8 @@ export default {
     return Promise.resolve(true);
   },
 };
+
+export default submissionService;
 
 let submissions: SubmissionModel[] = [
   {

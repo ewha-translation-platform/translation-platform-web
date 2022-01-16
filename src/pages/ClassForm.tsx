@@ -54,7 +54,7 @@ function ClassForm() {
         reset(data);
       });
     }
-  }, [classId]);
+  }, [classId, reset]);
 
   useEffect(() => {
     if (watchCourseId === -1) {
@@ -62,29 +62,32 @@ function ClassForm() {
     }
   }, [watchCourseId]);
 
-  const complete = useCallback(({ data }: Papa.ParseResult<string>) => {
-    Promise.all(
-      data.slice(1, -1).map(async (d) => {
-        const userDto: UserDto = {
-          email: d[6],
-          collegeName: d[1],
-          departmentName: d[2],
-          lastName: d[4],
-          firstName: d[4],
-          academicId: d[3],
-          isAdmin: false,
-          role: "student",
-        };
-        const createdUser = await userService.postOne(userDto);
-        return createdUser;
-      })
-    ).then((students) =>
-      setValue(
-        "studentIds",
-        students.map((s) => s.id)
-      )
-    );
-  }, []);
+  const complete = useCallback(
+    ({ data }: Papa.ParseResult<string>) => {
+      Promise.all(
+        data.slice(1, -1).map(async (d) => {
+          const userDto: UserDto = {
+            email: d[6],
+            collegeName: d[1],
+            departmentName: d[2],
+            lastName: d[4],
+            firstName: d[4],
+            academicId: d[3],
+            isAdmin: false,
+            role: "student",
+          };
+          const createdUser = await userService.postOne(userDto);
+          return createdUser;
+        })
+      ).then((students) =>
+        setValue(
+          "studentIds",
+          students.map((s) => s.id)
+        )
+      );
+    },
+    [setValue]
+  );
 
   function handleFileInput(e: ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;

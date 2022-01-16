@@ -1,8 +1,6 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-
+import { useContext, useEffect, useState } from "react";
 import AssignmentCard from "../components/AssignmentCard";
 import NewItemCard from "../components/NewItemCard";
-
 import UserContext from "../contexts/UserContext";
 import assignmentService from "../services/assignmentService";
 
