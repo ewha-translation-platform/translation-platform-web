@@ -8,7 +8,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ label, className, ...props }, ref) => (
     <label className={`${className}`}>
       <input type="checkbox" ref={ref} {...props} />
-      {label}
+      <span className="ml-1 align-middle">{label}</span>
     </label>
   )
 );

@@ -1,7 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap");
 
 :root {
+  --primary-color: #00462a;
   --navbar-height: 56px;
+  --sidebar-width: 150px;
 }
 
 @tailwind base;
@@ -31,7 +33,8 @@
 
   select,
   textarea,
-  input {
+  input[type="text"],
+  input[type="datetime-local"] {
     @apply p-2 rounded-md border border-primary focus:border-primary focus:ring-primary;
   }
 }

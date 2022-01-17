@@ -5,11 +5,11 @@ module.exports = {
   theme: {
     extend: {
       spacing: {
-        navbar: "56px",
-        sidebar: "150px",
+        navbar: "var(--navbar-height)",
+        sidebar: "var(--sidebar-width)",
       },
       colors: {
-        primary: "#00462A",
+        primary: "var(--primary-color)",
         secondary: colors.neutral,
         danger: colors.red[700],
       },

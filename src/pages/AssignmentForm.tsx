@@ -70,12 +70,10 @@ function AssignmentForm() {
   );
 
   return (
-    <main className="p-4 flex-grow">
-      <h2 className="subtitle mb-4">
-        {assignmentId === "new" ? "과제 추가" : "과제 수정"}
-      </h2>
+    <main className="p-4 space-y-4">
+      <h2>{assignmentId === "new" ? "과제 추가" : "과제 수정"}</h2>
       <form
-        className="grid grid-cols-2 gap-2"
+        className="grid sm:grid-cols-2 gap-2"
         onSubmit={handleSubmit(onSubmit)}
       >
         <section className="grid grid-cols-4 gap-2 auto-rows-min">
@@ -107,10 +105,15 @@ function AssignmentForm() {
           <TextArea
             label="과제 설명"
             className="col-span-4"
+            rows={5}
             innerClassName="resize-none"
             {...register("description", { required: true })}
           ></TextArea>
-          <Checkbox label="과제 제출물 공개 여부" {...register("isPublic")} />
+          <Checkbox
+            label="과제 제출물 공개 여부"
+            className="col-span-4"
+            {...register("isPublic")}
+          />
         </section>
         <section>
           {watch("assignmentType") === "translate" ? (
@@ -146,20 +149,20 @@ function AssignmentForm() {
             </>
           )}
         </section>
-        <section className="col-span-full grid grid-cols-12 gap-2">
+        <section className="col-span-full flex gap-2">
           <button
             className="btn bg-secondary-500 text-white"
             onClick={() => navigate("..")}
           >
             취소
           </button>
-          <button className="btn bg-primary text-white col-start-11" disabled>
+          <button className="btn bg-primary text-white ml-auto" disabled>
             미리보기
           </button>
           <input
             type="submit"
             value="확인"
-            className="btn bg-primary text-white"
+            className="btn bg-primary text-white justify-self-end"
           />
         </section>
       </form>

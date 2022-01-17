@@ -8,7 +8,7 @@ const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
   ({ label, className, ...props }, ref) => (
     <label className={`flex flex-col gap-1 ${className}`}>
       {label}
-      <input ref={ref} {...props} />
+      <input ref={ref} type="text" {...props} />
     </label>
   )
 );

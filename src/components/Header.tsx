@@ -8,9 +8,9 @@ function Header() {
 
   return (
     <header
-      className={`fixed top-0 w-full z-10 h-navbar flex gap-2 items-center bg-primary text-white p-2 sm:p-4 transition-all`}
+      className={`z-10 p-2 h-navbar flex gap-2 items-center bg-primary text-white transition-all sm:fixed sm:w-full sm:p-4`}
     >
-      <Link to="/" className="flex-grow">
+      <Link to="/" className="mr-auto">
         <h1 className="font-normal">Translation Platform</h1>
       </Link>
       <span className="hidden sm:inline">
