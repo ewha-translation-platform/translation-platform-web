@@ -1,3 +1,8 @@
+interface Option<V = string | number> {
+  label: string;
+  value: V;
+}
+
 type AssignmentType = "translate" | "simultaneous" | "sequential";
 type Semester = "spring" | "summer" | "fall" | "winter";
 type Role = "professor" | "assistant" | "student";
@@ -141,6 +146,7 @@ interface Feedback {
   submissionId: number;
   professor: User;
   selectedIdx: Region;
+  selectedOrigin: boolean;
   comment: string;
   categories: FeedbackCategory[];
 }
@@ -149,6 +155,7 @@ interface FeedbackModel {
   submissionId: number;
   professorId: number;
   selectedIdx: Region;
+  selectedOrigin: boolean;
   comment: string;
   categoryIds: number[];
 }

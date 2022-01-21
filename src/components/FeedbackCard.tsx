@@ -1,11 +1,10 @@
 import { MouseEventHandler, useState } from "react";
-import colorScheme from "../utils/colorScheme";
-import CreatableSelect from "./common/CreatableSelect";
-import TextArea from "./common/TextArea";
+import { CreatableSelect, TextArea } from "./common";
 
 interface FeedbackCardProps {
   readonly feedback: Feedback;
   selectedText: string;
+  backgroundColor: string;
   categories: FeedbackCategory[];
   onMouseEnter: MouseEventHandler;
   onMouseLeave: MouseEventHandler;
@@ -17,6 +16,7 @@ interface FeedbackCardProps {
 function FeedbackCard({
   feedback,
   selectedText,
+  backgroundColor,
   categories,
   onMouseEnter: handleMouseEnter = () => {},
   onMouseLeave: handleMouseLeave = () => {},
@@ -30,12 +30,15 @@ function FeedbackCard({
     feedback.categories.map((c) => c.id)
   );
 
+  const categoryOptions = categories.map((c) => ({
+    value: c.id,
+    label: c.name,
+  }));
+
   return (
     <li
-      className={`snap-start flex flex-col gap-2 rounded-md shadow-md p-4 hover:cursor-pointer hover:shadow-none transition-shadow`}
-      style={{
-        backgroundColor: colorScheme[categoryIds[0] % colorScheme.length],
-      }}
+      className={`flex flex-col gap-2 rounded-md shadow-md p-4 hover:cursor-pointer hover:shadow-none transition-shadow`}
+      style={{ backgroundColor }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -50,23 +53,18 @@ function FeedbackCard({
           setComment(e.target.value);
         }}
       ></TextArea>
-      <CreatableSelect
-        value={categories
-          .filter((c) => c.id in categoryIds)
-          .map((c) => ({ value: c.id, label: c.name }))}
+      <CreatableSelect<Option<number>, true>
+        value={categoryOptions.filter((c) => categoryIds.includes(c.value))}
         onChange={(newValue) => {
           setIsDirty(true);
-          setCategoryIds(
-            Array.isArray(newValue)
-              ? newValue.map((v) => v.value)
-              : [(newValue as { value: number; label: string }).value]
-          );
+          setCategoryIds(newValue.map((v) => v.value));
         }}
         onCreateOption={async (value) => {
           const { id: newId } = await handleCreateCategory(value);
           setCategoryIds((ids) => [...ids, newId]);
+          setIsDirty(true);
         }}
-        options={categories.map((c) => ({ value: c.id, label: c.name }))}
+        options={categoryOptions}
         classNamePrefix="react-select"
         isMulti
         isSearchable

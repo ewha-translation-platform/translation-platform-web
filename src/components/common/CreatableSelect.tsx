@@ -1,22 +1,20 @@
 import { GroupBase } from "react-select";
 import Creatable, { CreatableProps } from "react-select/creatable";
 
-function CreatableSelect(
-  props: CreatableProps<
-    { value: number; label: string },
-    boolean,
-    GroupBase<{ value: number; label: string }>
-  >
-) {
+function CreatableSelect<
+  Option,
+  IsMulti extends boolean = boolean,
+  Group extends GroupBase<Option> = GroupBase<Option>
+>(props: CreatableProps<Option, IsMulti, Group>) {
   return (
-    <Creatable
+    <Creatable<Option, IsMulti, Group>
       {...props}
       formatCreateLabel={(inputValue) => `"${inputValue}" 추가`}
       theme={(theme) => ({
         ...theme,
         colors: {
           ...theme.colors,
-          primary25: "rgba(0, 70, 42, 30%)",
+          primary25: "#00462A4D",
           primary: "#00462A",
         },
       })}

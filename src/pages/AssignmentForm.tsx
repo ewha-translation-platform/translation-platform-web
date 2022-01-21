@@ -13,12 +13,9 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/src/plugin/regions";
-import Checkbox from "../components/common/Checkbox";
-import InputField from "../components/common/InputField";
-import Select from "../components/common/Select";
-import TextArea from "../components/common/TextArea";
-import assignmentService from "../services/assignmentService";
-import colorScheme from "../utils/colorScheme";
+import { Checkbox, InputField, Select, TextArea } from "@/components/common";
+import { assignmentService } from "@/services";
+import { colorScheme } from "@/utils";
 
 const assignmentTypeOptions = [
   { label: "번역", value: "translate" },
@@ -27,7 +24,7 @@ const assignmentTypeOptions = [
 ];
 
 function AssignmentForm() {
-  const [ignored, forceUpdate] = useReducer((x) => x + 1, 0);
+  const forceUpdate = useReducer((x) => x + 1, 0)[1];
   const { assignmentId } = useParams();
   const navigate = useNavigate();
   const [waveSurfer, setWaveSurfer] = useState<WaveSurfer | null>(null);
@@ -46,11 +43,12 @@ function AssignmentForm() {
 
   useEffect(() => {
     if (assignmentId !== "new") {
-      assignmentService
-        .getOne(+assignmentId!)
-        .then((assignment) => reset({ ...assignment }));
+      (async function () {
+        const assignment = await assignmentService.getOne(+assignmentId!);
+        reset(assignment);
+      })();
     }
-  }, [assignmentId, setValue, reset]);
+  }, [assignmentId, reset]);
 
   const onSubmit: SubmitHandler<AssignmentDto> = (data) => {
     assignmentService
@@ -124,7 +122,13 @@ function AssignmentForm() {
       waveSurfer.load("/examples/simultaneous.m4a");
       waveSurfer.on("region-update-end", forceUpdate);
     }
-  }, [wavesurferContainer, watchAssignmentType]);
+  }, [
+    wavesurferContainer,
+    watchAssignmentType,
+    forceUpdate,
+    watchSequentialRegions,
+    waveSurfer,
+  ]);
 
   return (
     <main className="p-4 space-y-4">
@@ -195,7 +199,7 @@ function AssignmentForm() {
                     <button
                       className="btn-sm text-white"
                       key={r.id}
-                      style={{ backgroundColor: colorScheme[idx] }}
+                      style={{ backgroundColor: colorScheme(idx) }}
                       onClick={(e) => {
                         e.preventDefault();
                         r.play();

@@ -1,52 +1,71 @@
-import { ReactNode, useMemo, useRef } from "react";
-import colorScheme from "../utils/colorScheme";
+import { ReactNode, useEffect, useMemo, useRef } from "react";
 
 type HighlightableProps = {
   text: string;
-  highlightedIdxs: (Region & { color: number })[];
+  highlightedRegions: (Region & { color: string })[];
   className: string;
   onSelect: (selectedIdx: Region) => void;
 };
 
 function Highlightable({
   text,
-  highlightedIdxs,
+  highlightedRegions,
   onSelect: handleSelect,
   className,
   ...props
 }: HighlightableProps) {
   const highlightDivRef = useRef<HTMLDivElement>(null);
-
-  const highlightedText = useMemo(() => {
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const markRef = useRef<HTMLSpanElement>(null);
+  const highlightedText: ReactNode[] = useMemo(() => {
     const result: ReactNode[] = [];
-    const sortedIdxs = highlightedIdxs.sort((a, b) => a.start - b.start);
-
-    if (sortedIdxs.length === 0) return text;
-    for (let i = 0; i < sortedIdxs.length; i++) {
-      const prevEnd = i === 0 ? 0 : sortedIdxs[i - 1].end;
-      const { color, start, end } = sortedIdxs[i];
-      result.push(text.slice(prevEnd, start));
-      result.push(
-        <mark
-          key={i}
-          style={{
-            backgroundColor: colorScheme[color % colorScheme.length],
-            color: "transparent",
-          }}
-        >
-          {text.slice(start, end)}
-        </mark>
-      );
+    if (highlightedRegions.length === 0) {
+      result.push(text);
+    } else {
+      const sorted = highlightedRegions.sort((a, b) => a.start - b.start);
+      for (let i = 0; i < sorted.length; i++) {
+        const prevEnd = sorted[i - 1]?.end ?? 0;
+        const { color: backgroundColor, start, end } = sorted[i];
+        result.push(
+          text.slice(prevEnd, start),
+          <mark
+            key={i}
+            style={{ backgroundColor }}
+            ref={i == 0 ? markRef : null}
+          >
+            {text.slice(start, end)}
+          </mark>
+        );
+      }
+      result.push(text.slice(sorted[sorted.length - 1].end));
     }
-    result.push(text.slice(sortedIdxs[sortedIdxs.length - 1].end));
     return result;
-  }, [text, highlightedIdxs]);
+  }, [highlightedRegions, text]);
+
+  function syncScroll() {
+    if (highlightDivRef.current && textAreaRef.current)
+      highlightDivRef.current.scrollTop = textAreaRef.current.scrollTop;
+  }
+
+  useEffect(syncScroll);
+  useEffect(() => {
+    if (!(textAreaRef.current && markRef.current)) return;
+    const markOffsetTop = markRef.current.offsetTop;
+    const { scrollTop, offsetHeight, scrollHeight } = textAreaRef.current;
+    if (
+      highlightedRegions.length === 1 &&
+      (markOffsetTop < scrollTop || markOffsetTop > offsetHeight - scrollTop)
+    ) {
+      textAreaRef.current.scrollTop = Math.min(markOffsetTop, scrollHeight);
+      syncScroll();
+    }
+  }, [textAreaRef, highlightedRegions]);
 
   return (
     <div className={`relative ${className}`} {...props}>
-      <div className="absolute h-full w-full bg-white border rounded-md">
+      <div className="absolute h-full w-full bg-white text-transparent border rounded-md">
         <div
-          className="h-full w-full p-2 text-transparent break-words whitespace-pre-wrap pointer-events-none overflow-auto"
+          className="h-full w-full p-2 break-words whitespace-pre-wrap pointer-events-none overflow-auto"
           ref={highlightDivRef}
         >
           {highlightedText}
@@ -54,9 +73,7 @@ function Highlightable({
       </div>
       <textarea
         className="absolute h-full w-full bg-transparent resize-none"
-        onScroll={(e) =>
-          (highlightDivRef.current!.scrollTop = e.currentTarget.scrollTop)
-        }
+        onScroll={syncScroll}
         onSelect={(e) => {
           const selectedIdx: Region = {
             start: e.currentTarget.selectionStart,
@@ -68,6 +85,7 @@ function Highlightable({
         }}
         readOnly
         value={text}
+        ref={textAreaRef}
       ></textarea>
     </div>
   );

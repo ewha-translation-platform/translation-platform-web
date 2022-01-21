@@ -70,14 +70,16 @@ export let feedbacks: FeedbackModel[] = [
   {
     id: 0,
     selectedIdx: { start: 8, end: 30 },
+    selectedOrigin: false,
     comment: "불필요한",
     professorId: 0,
-    categoryIds: [0],
+    categoryIds: [3],
     submissionId: 0,
   },
   {
     id: 1,
     selectedIdx: { start: 31, end: 50 },
+    selectedOrigin: false,
     comment: "불필요한",
     professorId: 0,
     categoryIds: [2],
@@ -86,6 +88,7 @@ export let feedbacks: FeedbackModel[] = [
   {
     id: 2,
     selectedIdx: { start: 51, end: 70 },
+    selectedOrigin: false,
     comment: "불필요한",
     professorId: 0,
     categoryIds: [1],

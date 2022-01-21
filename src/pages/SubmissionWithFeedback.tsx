@@ -1,154 +1,197 @@
 import { PlusIcon } from "@heroicons/react/solid";
 import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
-import { useContext, useEffect, useMemo, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Pie } from "react-chartjs-2";
 import { useParams } from "react-router-dom";
-import FeedbackCard from "../components/FeedbackCard";
-import Highlightable from "../components/Highlightable";
-import UserContext from "../contexts/UserContext";
+import { FeedbackCard, Highlightable } from "@/components";
+import { UserContext } from "@/contexts";
 import {
   feedbackCategoryService,
   feedbackService,
-} from "../services/feedbackService";
-import submissionService from "../services/submissionService";
-import colorScheme from "../utils/colorScheme";
-
-Chart.register(ArcElement, Tooltip, Legend);
+  submissionService,
+} from "@/services";
+import { colorScheme } from "@/utils";
+import { useSubmissionReducer } from "@/hooks";
 
 function SubmissionWithFeedback() {
   const { user } = useContext(UserContext);
   const { submissionId } = useParams<{ submissionId: string }>();
-
-  const [submission, setSubmission] = useState<Submission>();
-
-  const [highlightedIdxs, setHighlightedIdxs] = useState<
-    { color: number; start: number; end: number }[]
+  const [submission, dispatch] = useSubmissionReducer();
+  const [highlightedRegions, setHighlightedRegions] = useState<
+    { color: string; start: number; end: number; selectedOrigin: boolean }[]
   >([]);
+  const feedbackListRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    submissionService.getOne(+submissionId!).then((submission) => {
-      setSubmission(submission);
-      setHighlightedIdxs(
-        submission.feedbacks.map(({ categories, selectedIdx }) => ({
-          color: categories[0].id,
+    Chart.register(ArcElement, Tooltip, Legend);
+    (async function () {
+      const result = await submissionService.getOne(+submissionId!);
+      dispatch({ type: "SET", payload: result });
+      setHighlightedRegions(
+        result.feedbacks.map(({ categories, selectedIdx, selectedOrigin }) => ({
+          color:
+            categories.length === 1
+              ? colorScheme(
+                  result.assignment.feedbackCategories.findIndex(
+                    (c) => c.id === categories[0].id
+                  )
+                )
+              : colorScheme("danger"),
+          selectedOrigin,
           ...selectedIdx,
         }))
       );
-    });
-  }, [submissionId]);
+    })();
+  }, [submissionId, dispatch]);
 
   const chartData = useMemo(() => {
-    const data = submission?.assignment.feedbackCategories.map(
-      (item) =>
-        submission.feedbacks.filter((s) =>
-          s.categories.some(({ id }) => id === item.id)
-        ).length
-    );
+    if (!submission) {
+      return { labels: [], datasets: [] };
+    }
+
+    type Result = Record<number, { name: string; cnt: number }>;
+    const acc = submission.feedbacks.reduce<Result>((result, f) => {
+      f.categories.forEach((c) => {
+        if (c.id in result) result[c.id].cnt++;
+        else {
+          result[c.id] = { name: c.name, cnt: 1 };
+        }
+      });
+      return result;
+    }, {});
     return {
-      labels:
-        submission?.assignment.feedbackCategories.map((c) => c.name) || [],
+      labels: Object.values(acc).map((c) => c.name),
       datasets: [
         {
-          label: "피드백 카테고리",
-          data: data || [],
-          backgroundColor: colorScheme,
+          data: Object.values(acc).map((c) => c.cnt),
+          backgroundColor: Object.keys(acc).map((id) =>
+            colorScheme(
+              submission.assignment.feedbackCategories.findIndex(
+                (c) => c.id === +id
+              )
+            )
+          ),
         },
       ],
     };
   }, [submission]);
 
-  async function handleSelect(selectedIdx: Region) {
-    if (!submission) return;
-    if (selectedIdx.start < selectedIdx.end) {
+  function handleSelectFactory(selectedOrigin: boolean) {
+    return async ({ start, end }: Region) => {
+      if (!submission) return;
+      if (start === end) return;
+      if (
+        submission.feedbacks
+          .filter((f) => f.selectedOrigin === selectedOrigin)
+          .find(({ selectedIdx: { start: s, end: e } }) => s < end && start < e)
+      ) {
+        alert("중복된 영억을 선택할 수 없습니다.");
+        return;
+      }
+
       const newFeedback = await feedbackService.postOne({
-        selectedIdx,
-        categoryIds: [0],
+        selectedIdx: { start, end },
+        selectedOrigin,
+        categoryIds: [],
         comment: "",
         professorId: user!.id,
         submissionId: submission.id,
       });
-      setSubmission(
-        (submission) =>
-          submission && {
-            ...submission,
-            feedbacks: [...submission.feedbacks, newFeedback],
-          }
-      );
-    }
+      dispatch({ type: "ADD_FEEDBACK", payload: newFeedback });
+      setHighlightedRegions([
+        { color: colorScheme("default"), start, end, selectedOrigin },
+      ]);
+      feedbackListRef.current?.scrollBy({
+        behavior: "smooth",
+        top: feedbackListRef.current.scrollHeight,
+      });
+    };
   }
 
-  function handleMouseEnter({ categories, selectedIdx }: Feedback) {
-    setHighlightedIdxs([{ color: categories[0].id, ...selectedIdx }]);
+  function handleMouseEnter({
+    categories,
+    selectedIdx,
+    selectedOrigin,
+  }: Feedback) {
+    if (!submission) return;
+    setHighlightedRegions([
+      {
+        color: getColor(categories),
+        selectedOrigin,
+        ...selectedIdx,
+      },
+    ]);
   }
 
   function handleMouseLeave() {
-    setHighlightedIdxs(
-      submission?.feedbacks.map(({ categories, selectedIdx }) => ({
-        color: categories[0].id,
-        ...selectedIdx,
-      })) || []
+    setHighlightedRegions(
+      submission?.feedbacks.map(
+        ({ categories, selectedIdx, selectedOrigin }) => ({
+          color: getColor(categories),
+
+          selectedOrigin,
+          ...selectedIdx,
+        })
+      ) ?? []
     );
   }
 
   async function handleCreateCategory(name: string) {
     const newCategory = await feedbackCategoryService.postOne({ name });
-    setSubmission(
-      (submission) =>
-        submission && {
-          ...submission,
-          assignment: {
-            ...submission.assignment,
-            feedbackCategories: [
-              ...submission.assignment.feedbackCategories,
-              newCategory,
-            ],
-          },
-        }
-    );
+    dispatch({ type: "ADD_CATEGORY", payload: newCategory });
     return newCategory;
   }
 
-  function handleDelete(targetId: number) {
+  async function handleDelete(targetId: number) {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    setSubmission(
-      (submission) =>
-        submission && {
-          ...submission,
-          feedbacks: submission.feedbacks.filter((f) => f.id !== targetId),
-        }
-    );
-    feedbackService
-      .deleteOne(targetId)
-      .then(() => alert("삭제되었습니다."))
-      .catch((e) => alert(`에러가 발생하였습니다. ${e}`));
+    dispatch({ type: "DELETE_FEEDBACK", payload: targetId });
+
+    try {
+      await feedbackService.deleteOne(targetId);
+      alert("삭제되었습니다.");
+    } catch (error) {
+      alert(`에러가 발생하였습니다. ${error}`);
+    }
   }
 
-  function handleSaveFeedback(
+  async function handleSaveFeedback(
     targetId: number,
     comment: string,
     categoryIds: number[]
   ) {
-    setSubmission(
-      (submission) =>
-        submission && {
-          ...submission,
-          feedbacks: submission.feedbacks.map((f) =>
-            f.id === targetId
-              ? {
-                  ...f,
-                  comment,
-                  categories: submission.assignment.feedbackCategories.filter(
-                    (c) => c.id in categoryIds
-                  ),
-                }
-              : f
-          ),
-        }
-    );
-    feedbackService
-      .putOne(targetId, { comment, categoryIds })
-      .then(() => alert("저장되었습니다."))
-      .catch((e) => alert(`에러가 발생하였습니다. ${e}`));
+    dispatch({
+      type: "PUT_FEEDBACK",
+      payload: { targetId, comment, categoryIds },
+    });
+    try {
+      await feedbackService.putOne(targetId, { comment, categoryIds });
+      alert("저장되었습니다.");
+    } catch (error) {
+      alert(`에러가 발생하였습니다. ${error}`);
+    }
+  }
+
+  function getColor(categories: FeedbackCategory[]) {
+    if (!submission) return "#000";
+    switch (categories.length) {
+      case 0:
+        return colorScheme("default");
+      case 1:
+        return colorScheme(
+          submission.assignment.feedbackCategories.findIndex(
+            (c) => c.id === categories[0].id
+          )
+        );
+      default:
+        return colorScheme("danger");
+    }
   }
 
   return submission ? (
@@ -164,6 +207,9 @@ function SubmissionWithFeedback() {
         <button className="btn bg-primary text-white" disabled>
           다음 학생
         </button>
+        <button className="btn bg-secondary-500 text-white" disabled>
+          임시 저장
+        </button>
         <button
           className="btn bg-primary text-white hover:opacity-80"
           onClick={(e) => {
@@ -177,18 +223,21 @@ function SubmissionWithFeedback() {
           저장
         </button>
       </nav>
-      <section className="h-[calc(100vh-2*var(--navbar-height)-2rem)] grid grid-rows-[minmax(0,1fr)_min-content] grid-cols-[auto_400px] gap-4">
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <section className="h-[calc(100vh-2*var(--navbar-height)-2rem)] grid grid-rows-[minmax(0,1fr)_min-content] grid-cols-[auto_21rem] gap-4">
+        <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <article className="flex flex-col">
             <h3>원문</h3>
             {submission.assignment.assignmentType !== "translate" && (
               <audio controls className="w-full"></audio>
             )}
-            <textarea
-              className="flex-grow w-full resize-none"
-              readOnly
-              value={submission.assignment.textFile}
-            ></textarea>
+            <Highlightable
+              className="flex-grow"
+              text={submission.assignment.textFile}
+              highlightedRegions={highlightedRegions.filter(
+                ({ selectedOrigin }) => selectedOrigin
+              )}
+              onSelect={handleSelectFactory(true)}
+            />
           </article>
           <article className="flex flex-col">
             <h3>번역문</h3>
@@ -198,22 +247,28 @@ function SubmissionWithFeedback() {
             <Highlightable
               className="flex-grow"
               text={submission.textFile}
-              highlightedIdxs={highlightedIdxs}
-              onSelect={handleSelect}
+              highlightedRegions={highlightedRegions.filter(
+                ({ selectedOrigin }) => !selectedOrigin
+              )}
+              onSelect={handleSelectFactory(false)}
             />
           </article>
         </section>
         <section className="flex flex-col">
           <h3>피드백</h3>
-          <ul className="overflow-auto snap-y snap-mandatory flex flex-col gap-2 hidden-scrollbar">
+          <ul
+            className="overflow-auto flex flex-col gap-2 hidden-scrollbar"
+            ref={feedbackListRef}
+          >
             {submission.feedbacks.map((feedback) => (
               <FeedbackCard
                 key={feedback.id}
                 feedback={feedback}
-                selectedText={submission.textFile.slice(
-                  feedback.selectedIdx.start,
-                  feedback.selectedIdx.end
-                )}
+                selectedText={(feedback.selectedOrigin
+                  ? submission.assignment.textFile
+                  : submission.textFile
+                ).slice(feedback.selectedIdx.start, feedback.selectedIdx.end)}
+                backgroundColor={getColor(feedback.categories)}
                 categories={submission.assignment.feedbackCategories}
                 onMouseEnter={() => handleMouseEnter(feedback)}
                 onMouseLeave={handleMouseLeave}
@@ -237,12 +292,7 @@ function SubmissionWithFeedback() {
             placeholder="총평을 입력하세요."
             rows={6}
             onChange={(e) =>
-              setSubmission(
-                submission && {
-                  ...submission,
-                  generalReview: e.target.value,
-                }
-              )
+              dispatch({ type: "SET_GENERAL_REVIEW", payload: e.target.value })
             }
             value={submission.generalReview}
           ></textarea>
