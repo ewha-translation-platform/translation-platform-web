@@ -1,8 +1,7 @@
 import { useContext, useEffect, useState } from "react";
-import AssignmentCard from "../components/AssignmentCard";
-import NewItemCard from "../components/NewItemCard";
-import UserContext from "../contexts/UserContext";
-import assignmentService from "../services/assignmentService";
+import { AssignmentCard, NewItemCard } from "../components";
+import { UserContext } from "@/contexts";
+import { assignmentService } from "@/services";
 
 function Assignments() {
   const currentWeek = 0;

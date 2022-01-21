@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import TextArea from "../components/common/TextArea";
-
-import assignmentService from "../services/assignmentService";
-import submissionService from "../services/submissionService";
+import { TextArea } from "@/components/common";
+import { assignmentService, submissionService } from "@/services";
 
 function Submission() {
   const { assignmentId } = useParams<{ assignmentId: string }>();

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import Table from "../components/common/Table";
-
-import { classService } from "../services/classService";
+import { Table } from "@/components/common";
+import { classService } from "@/services";
 
 function Students() {
   const { classId } = useParams<{ classId: string }>();

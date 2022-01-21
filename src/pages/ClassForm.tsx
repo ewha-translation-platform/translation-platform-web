@@ -3,15 +3,10 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import XLSX from "xlsx";
-import InputField from "../components/common/InputField";
-import Select, {
-  semesterOptions,
-  yearOptions,
-} from "../components/common/Select";
-import Table from "../components/common/Table";
-import CourseModal from "../components/CourseModal";
-import { classService, courseService } from "../services/classService";
-import userService from "../services/userService";
+import { CourseModal } from "@/components";
+import { InputField, Select, Table } from "@/components/common";
+import { semesterOptions, yearOptions } from "@/components/common/Select";
+import { classService, courseService, userService } from "@/services";
 
 function ClassForm() {
   const navigate = useNavigate();

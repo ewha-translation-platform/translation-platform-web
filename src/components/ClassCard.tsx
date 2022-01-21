@@ -1,7 +1,6 @@
 import { PencilIcon, TrashIcon, UserIcon } from "@heroicons/react/solid";
 import { useNavigate } from "react-router-dom";
-
-import Card from "./common/Card";
+import Card from "./Card";
 
 interface ClassCardProps {
   classInfo: Class;

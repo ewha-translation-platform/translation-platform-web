@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
-
-import InputField from "./common/InputField";
+import { InputField } from "./common";
 
 interface CourseModalProps {
   visible: boolean;

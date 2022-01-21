@@ -1,18 +1,11 @@
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-
-import ClassCard from "../components/ClassCard";
-import InputField from "../components/common/InputField";
-import Select, {
-  semesterOptions,
-  yearOptions,
-} from "../components/common/Select";
-import NewItemCard from "../components/NewItemCard";
-
-import UserContext from "../contexts/UserContext";
-import useSearch from "../hooks/useSearch";
-
-import { classService } from "../services/classService";
+import { ClassCard, NewItemCard } from "@/components";
+import { InputField, Select } from "@/components/common";
+import { semesterOptions, yearOptions } from "../components/common/Select";
+import { UserContext } from "@/contexts";
+import { useSearch } from "@/hooks";
+import { classService } from "@/services";
 
 type FilterFields = {
   year: number | "";

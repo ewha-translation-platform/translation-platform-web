@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-import Table from "../components/common/Table";
-
-import assignmentService from "../services/assignmentService";
+import { Table } from "@/components/common";
+import { assignmentService } from "@/services";
 
 function Submissions() {
   const navigate = useNavigate();

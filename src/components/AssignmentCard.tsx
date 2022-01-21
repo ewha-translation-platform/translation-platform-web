@@ -1,8 +1,8 @@
 import { PencilIcon, TrashIcon } from "@heroicons/react/solid";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import UserContext from "../contexts/UserContext";
-import Card from "./common/Card";
+import { UserContext } from "@/contexts";
+import Card from "./Card";
 
 interface AssignmentCardProps {
   assignment: Assignment;
