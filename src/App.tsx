@@ -1,23 +1,20 @@
 import { useLayoutEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-
-import Header from "./components/Header";
-import Sidebar from "./components/Sidebar";
-
-import UserContext from "./contexts/UserContext";
-
-import AssignmentForm from "./pages/AssignmentForm";
-import Assignments from "./pages/Assignments";
-import Auth from "./pages/Auth";
-import Classes from "./pages/Classes";
-import ClassForm from "./pages/ClassForm";
-import Home from "./pages/Home";
-import Students from "./pages/Students";
-import Submission from "./pages/Submission";
-import Submissions from "./pages/Submissions";
-import SubmissionWithFeedback from "./pages/SubmissionWithFeedback";
-
-import userService from "./services/userService";
+import { Header, Sidebar } from "@/components";
+import { UserContext } from "@/contexts";
+import {
+  AssignmentForm,
+  Assignments,
+  Auth,
+  Classes,
+  ClassForm,
+  Home,
+  Students,
+  Submission,
+  Submissions,
+  SubmissionWithFeedback,
+} from "@/pages";
+import { userService } from "@/services";
 
 function Wrapper() {
   return (
