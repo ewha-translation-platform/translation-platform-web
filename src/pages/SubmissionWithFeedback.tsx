@@ -1,13 +1,6 @@
 import { PlusIcon } from "@heroicons/react/solid";
 import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
-import {
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Pie } from "react-chartjs-2";
 import { useParams } from "react-router-dom";
 import { FeedbackCard, Highlightable } from "@/components";

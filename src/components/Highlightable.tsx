@@ -31,7 +31,7 @@ function Highlightable({
           <mark
             key={i}
             style={{ backgroundColor }}
-            ref={i == 0 ? markRef : null}
+            ref={i === 0 ? markRef : null}
           >
             {text.slice(start, end)}
           </mark>
