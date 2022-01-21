@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ClassCard, NewItemCard } from "@/components";
 import { InputField, Select } from "@/components/common";
-import { semesterOptions, yearOptions } from "../components/common/Select";
+import { semesterOptions, yearOptions } from "@/utils";
 import { UserContext } from "@/contexts";
 import { useSearch } from "@/hooks";
 import { classService } from "@/services";

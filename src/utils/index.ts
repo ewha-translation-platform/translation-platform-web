@@ -1,3 +1,4 @@
 import colorScheme from "./colorScheme";
+import { yearOptions, semesterOptions } from "./yearSemesterOptions";
 
-export { colorScheme };
+export { colorScheme, yearOptions, semesterOptions };

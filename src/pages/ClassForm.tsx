@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import XLSX from "xlsx";
 import { CourseModal } from "@/components";
 import { InputField, Select, Table } from "@/components/common";
-import { semesterOptions, yearOptions } from "@/components/common/Select";
+import { semesterOptions, yearOptions } from "@/utils";
 import { classService, courseService, userService } from "@/services";
 
 function ClassForm() {
