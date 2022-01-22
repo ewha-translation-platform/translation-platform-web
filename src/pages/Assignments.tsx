@@ -21,7 +21,7 @@ function Assignments() {
   }
 
   return (
-    <main className="p-4 space-y-4">
+    <main className="p-4 space-y-4 overflow-auto">
       <h2>과제 목록</h2>
       <section className="p-4 space-y-4 bg-secondary-300 rounded-md shadow-inner">
         <h3>현재 주차</h3>

@@ -31,10 +31,10 @@ function Submission() {
 
   if (!assignment) return <span>Loading...</span>;
   return (
-    <main className="p-4 h-[calc(100vh-var(--navbar-height))] max-w-6xl grid grid-rows-[min-content_1fr_min-content] grid-cols md:grid-cols-2 gap-2">
+    <main className="p-4 max-w-5xl grid grid-rows-[min-content_1fr_min-content] gap-2">
       <h2 className="col-span-full">과제 제출</h2>
       {assignment.assignmentType === "translate" ? (
-        <>
+        <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <TextArea
             label="원문"
             className="text-xl"
@@ -48,7 +48,7 @@ function Submission() {
             innerClassName="resize-none h-full"
             {...register("textFile", { required: true })}
           ></TextArea>
-        </>
+        </section>
       ) : (
         <>
           <label className="flex flex-col">

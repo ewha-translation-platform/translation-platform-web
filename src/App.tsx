@@ -21,9 +21,7 @@ function Wrapper() {
     <>
       <Header />
       <Sidebar />
-      <div className="hidden-scrollbar sm:pt-navbar sm:pl-sidebar sm:overflow-auto">
-        <Outlet />
-      </div>
+      <Outlet />
     </>
   );
 }

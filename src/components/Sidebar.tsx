@@ -19,7 +19,7 @@ function Sidebar() {
   // const { user } = useContext(UserContext);
 
   return (
-    <nav className="flex bg-secondary-800 text-white sm:h-screen sm:w-sidebar sm:pt-navbar sm:fixed sm:flex-col">
+    <nav className="flex bg-secondary-800 text-white sm:flex-col">
       {/* <StyledNavLink to="home" label="홈" /> */}
       <StyledNavLink to="classes" label="강의 목록" />
       {/* {user?.role === "student" ? (

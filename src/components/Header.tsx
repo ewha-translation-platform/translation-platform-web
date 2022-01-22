@@ -7,7 +7,7 @@ function Header() {
 
   return (
     <header
-      className={`z-10 p-2 h-navbar flex gap-2 items-center bg-primary text-white transition-all sm:fixed sm:w-full sm:p-4`}
+      className={`col-span-full p-2 flex gap-2 items-center bg-primary text-white`}
     >
       <Link to="/" className="mr-auto">
         <h1 className="font-normal">Translation Platform</h1>
