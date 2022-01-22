@@ -29,17 +29,21 @@ const submissionService = {
       ...rests,
     });
   },
-  async postOne(submissionDto: SubmissionDto) {
+  async postOne(dto: CreateSubmissionDto) {
     const newSubmission: SubmissionModel = {
       id: submissions.length,
-      ...submissionDto,
+      generalReview: "",
+      score: 0,
+      isGraded: false,
+      feedbackIds: [],
+      ...dto,
     };
     submissions.push(newSubmission);
     return Promise.resolve(newSubmission);
   },
-  async putOne(targetId: number, submissionDto: Partial<SubmissionDto>) {
+  async putOne(dto: PutSubmissionDto) {
     submissions = submissions.map((s) =>
-      s.id === targetId ? { ...s, ...submissionDto } : s
+      s.id === dto.id ? { ...s, ...dto } : s
     );
     return Promise.resolve(true);
   },
@@ -59,6 +63,7 @@ let submissions: SubmissionModel[] = [
       .map(({ id }) => id),
     generalReview: "",
     isGraded: true,
+    isTemporal: false,
     playCount: 0,
     playbackRate: 1,
     studentId: 0,
@@ -74,6 +79,7 @@ let submissions: SubmissionModel[] = [
       .map(({ id }) => id),
     generalReview: "",
     isGraded: true,
+    isTemporal: false,
     playCount: 0,
     playbackRate: 1,
     studentId: 0,
@@ -89,6 +95,7 @@ let submissions: SubmissionModel[] = [
       .map(({ id }) => id),
     generalReview: "",
     isGraded: true,
+    isTemporal: false,
     playCount: 0,
     playbackRate: 1,
     studentId: 0,

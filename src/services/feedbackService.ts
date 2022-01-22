@@ -75,6 +75,7 @@ export let feedbacks: FeedbackModel[] = [
     professorId: 0,
     categoryIds: [3],
     submissionId: 0,
+    isTemporal: false,
   },
   {
     id: 1,
@@ -84,6 +85,7 @@ export let feedbacks: FeedbackModel[] = [
     professorId: 0,
     categoryIds: [2],
     submissionId: 0,
+    isTemporal: false,
   },
   {
     id: 2,
@@ -93,5 +95,6 @@ export let feedbacks: FeedbackModel[] = [
     professorId: 0,
     categoryIds: [1],
     submissionId: 0,
+    isTemporal: false,
   },
 ];

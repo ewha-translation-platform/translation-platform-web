@@ -93,47 +93,47 @@ let courses: CourseModel[] = [
   },
 ];
 
-let classes: ClassModel[] = [
+export let classes: ClassModel[] = [
   {
     id: 0,
     courseId: 0,
     classNumber: 1,
-    studentIds: [],
-    professorIds: [],
+    studentIds: [1, 2, 3],
+    professorIds: [0],
   },
   {
     id: 1,
     courseId: 1,
     classNumber: 1,
-    studentIds: [],
-    professorIds: [],
+    studentIds: [1, 2, 3],
+    professorIds: [0],
   },
   {
     id: 2,
     courseId: 2,
     classNumber: 1,
-    studentIds: [],
-    professorIds: [],
+    studentIds: [1, 2, 3],
+    professorIds: [0],
   },
   {
     id: 3,
     courseId: 3,
     classNumber: 1,
-    studentIds: [],
-    professorIds: [],
+    studentIds: [1, 2, 3],
+    professorIds: [0],
   },
   {
     id: 4,
     courseId: 4,
     classNumber: 1,
-    studentIds: [],
-    professorIds: [],
+    studentIds: [1, 2, 3],
+    professorIds: [0],
   },
   {
     id: 5,
     courseId: 5,
     classNumber: 1,
-    studentIds: [],
-    professorIds: [],
+    studentIds: [1, 2, 3],
+    professorIds: [0],
   },
 ];

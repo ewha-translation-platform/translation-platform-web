@@ -1,3 +1,4 @@
+import { classes } from "./classService";
 import { feedbackCategories } from "./feedbackService";
 import { users } from "./userService";
 
@@ -39,15 +40,18 @@ const assignmentService = {
 
   getSubmissionStatuses(id: number): Promise<SubmissionStatus[]> {
     return Promise.resolve(
-      users.map(({ academicId, firstName, lastName }, idx) => ({
-        academicId,
-        firstName,
-        lastName,
-        isGraded: false,
-        playCount: 3,
-        submissionDateTime: new Date().toLocaleDateString(),
-        submissionId: idx % 3,
-      })) as SubmissionStatus[]
+      classes[assignments[id].classId].studentIds.map((id) => {
+        const { academicId, firstName, lastName } = users[id];
+        return {
+          academicId,
+          firstName,
+          lastName,
+          isGraded: false,
+          playCount: 3,
+          submissionDateTime: new Date().toLocaleDateString(),
+          submissionId: 0,
+        };
+      })
     );
   },
 };
@@ -57,6 +61,7 @@ export default assignmentService;
 export let assignments: AssignmentModel[] = [
   {
     id: 0,
+    classId: 0,
     assignmentType: "translate",
     name: "한->일 번역과제",
     description: "설명없음",
@@ -73,6 +78,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 1,
+    classId: 0,
     assignmentType: "translate",
     name: "일->한 번역과제",
     description: "설명없음",
@@ -89,6 +95,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 2,
+    classId: 0,
     assignmentType: "sequential",
     name: "한->일 순차통역과제",
     description: "설명없음",
@@ -105,6 +112,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 3,
+    classId: 0,
     assignmentType: "simultaneous",
     name: "한->일 동시통역과제",
     description: "설명없음",
@@ -121,6 +129,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 4,
+    classId: 0,
     assignmentType: "translate",
     name: "한->중 번역과제",
     description: "설명없음",
@@ -137,6 +146,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 5,
+    classId: 0,
     assignmentType: "translate",
     name: "중->한 번역과제",
     description: "설명없음",
@@ -153,6 +163,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 6,
+    classId: 0,
     assignmentType: "translate",
     name: "한->중 번역과제",
     description: "설명없음",
@@ -169,6 +180,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 7,
+    classId: 0,
     assignmentType: "translate",
     name: "중->한 번역과제",
     description: "설명없음",
@@ -185,6 +197,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 8,
+    classId: 0,
     assignmentType: "translate",
     name: "영->한 번역과제",
     description: "설명없음",
@@ -201,6 +214,7 @@ export let assignments: AssignmentModel[] = [
   },
   {
     id: 9,
+    classId: 0,
     assignmentType: "translate",
     name: "영->한 번역과제",
     description: "설명없음",

@@ -63,6 +63,7 @@ interface Region {
 }
 interface Assignment {
   id: number;
+  classId: number;
   name: string;
   description: string;
   weekNumber: number;
@@ -79,6 +80,7 @@ interface Assignment {
 }
 interface AssignmentModel {
   id: number;
+  classId: number;
   name: string;
   description: string;
   weekNumber: number;
@@ -106,6 +108,7 @@ interface Submission {
   generalReview: string;
   score: number;
   isGraded: boolean;
+  isTemporal: boolean;
   feedbacks: Feedback[];
 }
 
@@ -120,9 +123,29 @@ interface SubmissionModel {
   generalReview: string;
   score: number;
   isGraded: boolean;
+  isTemporal: boolean;
   feedbackIds: number[];
 }
-type SubmissionDto = Omit<SubmissionModel, "id">;
+interface CreateSubmissionDto {
+  studentId: number;
+  assignmentId: number;
+  textFile: string;
+  audioFile?: any;
+  playCount: number;
+  playbackRate: number;
+  isTemporal: boolean;
+}
+interface PutSubmissionDto {
+  id: number;
+  textFile?: string;
+  audioFile?: any;
+  playCount?: number;
+  playbackRate?: number;
+  generalReview?: string;
+  score?: number;
+  isGraded?: boolean;
+  feedbackIds?: number[];
+}
 
 interface SubmissionStatus {
   academicId: string;
@@ -149,6 +172,7 @@ interface Feedback {
   selectedOrigin: boolean;
   comment: string;
   categories: FeedbackCategory[];
+  isTemporal: boolean;
 }
 interface FeedbackModel {
   id: number;
@@ -158,5 +182,6 @@ interface FeedbackModel {
   selectedOrigin: boolean;
   comment: string;
   categoryIds: number[];
+  isTemporal: boolean;
 }
 type FeedbackDto = Omit<FeedbackModel, "id">;

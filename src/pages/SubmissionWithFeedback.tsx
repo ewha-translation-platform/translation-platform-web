@@ -96,6 +96,7 @@ function SubmissionWithFeedback() {
         comment: "",
         professorId: user!.id,
         submissionId: submission.id,
+        isTemporal: true,
       });
       dispatch({ type: "ADD_FEEDBACK", payload: newFeedback });
       setHighlightedRegions([
@@ -188,9 +189,9 @@ function SubmissionWithFeedback() {
   }
 
   return submission ? (
-    <main className="p-4">
-      <nav className="h-navbar flex items-start gap-2">
-        <h2 className="flex-grow">
+    <main className="p-4 grid grid-rows-[auto_minmax(0,100%)] gap-2">
+      <nav className="flex flex-wrap items-start gap-2">
+        <h2 className="mr-auto">
           {submission.student.lastName}
           {submission.student.firstName} 학생의 과제
         </h2>
@@ -207,17 +208,18 @@ function SubmissionWithFeedback() {
           className="btn bg-primary text-white hover:opacity-80"
           onClick={(e) => {
             e.preventDefault();
-            submissionService.putOne(submission.id, {
-              feedbackIds: submission.feedbacks.map((f) => f.id),
+            submissionService.putOne({
+              id: submission.id,
               generalReview: submission.generalReview,
+              feedbackIds: submission.feedbacks.map((f) => f.id),
             });
           }}
         >
           저장
         </button>
       </nav>
-      <section className="h-[calc(100vh-2*var(--navbar-height)-2rem)] grid grid-rows-[minmax(0,1fr)_min-content] grid-cols-[auto_21rem] gap-4">
-        <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
+      <section className="grid grid-cols-[1fr_20rem] gap-2">
+        <section className="grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-2">
           <article className="flex flex-col">
             <h3>원문</h3>
             {submission.assignment.assignmentType !== "translate" && (
@@ -247,7 +249,7 @@ function SubmissionWithFeedback() {
             />
           </article>
         </section>
-        <section className="flex flex-col">
+        <section className="flex flex-col min-h-0">
           <h3>피드백</h3>
           <ul
             className="overflow-auto flex flex-col gap-2 hidden-scrollbar"
@@ -290,7 +292,7 @@ function SubmissionWithFeedback() {
             value={submission.generalReview}
           ></textarea>
         </section>
-        <section className="p-4">
+        <section className="grid place-content-center">
           <Pie
             data={chartData}
             options={{
