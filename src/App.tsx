@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 import { Header, Sidebar } from "@/components";
 import { UserContext } from "@/contexts";
 import {
@@ -64,6 +65,7 @@ function App() {
           <Route index element={<Navigate to="/classes" replace />} />
         </Route>
       </Routes>
+      <ToastContainer />
     </UserContext.Provider>
   );
 }
