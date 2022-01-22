@@ -41,21 +41,21 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/*" element={<Wrapper />}>
           <Route path="home" element={<Home />} />
-          <Route path="classes/*">
+          <Route path="classes">
             <Route index element={<Classes />} />
-            <Route path=":classId/*">
+            <Route path=":classId">
               <Route index element={<ClassForm />} />
               <Route path="students" element={<Students />} />
-              <Route path="assignments/*">
+              <Route path="assignments">
                 <Route index element={<Assignments />} />
                 <Route path=":assignmentId" element={<AssignmentForm />} />
               </Route>
             </Route>
           </Route>
-          <Route path="assignments/*">
-            <Route path=":assignmentId/*">
+          <Route path="assignments">
+            <Route path=":assignmentId">
               <Route index element={<AssignmentForm />} />
-              <Route path="submissions/*">
+              <Route path="submissions">
                 <Route index element={<Submissions />} />
                 <Route path="my" element={<Submission />} />
               </Route>
