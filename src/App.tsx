@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { Header, Sidebar } from "@/components";
 import { UserContext } from "@/contexts";
@@ -14,30 +14,28 @@ import {
   Submissions,
   SubmissionWithFeedback,
 } from "@/pages";
-import { userService } from "@/services";
 
-function Wrapper() {
-  return (
-    <>
+function ProtectedWrapper() {
+  const { user } = useContext(UserContext);
+  return user ? (
+    <div className="bg-neutral-100 h-screen grid sm:grid-cols-[var(--sidebar-width)_1fr] grid-rows-[auto_auto_minmax(0,100%)] sm:grid-rows-[auto_minmax(0,100%)]">
       <Header />
       <Sidebar />
       <Outlet />
-    </>
+    </div>
+  ) : (
+    <Navigate to="/auth" />
   );
 }
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
 
-  useLayoutEffect(() => {
-    userService.getOne(0).then((user) => setUser(user));
-  }, []);
-
   return (
     <UserContext.Provider value={{ user, setUser }}>
       <Routes>
         <Route path="/auth" element={<Auth />} />
-        <Route path="/*" element={<Wrapper />}>
+        <Route path="/*" element={<ProtectedWrapper />}>
           <Route path="home" element={<Home />} />
           <Route path="classes">
             <Route index element={<Classes />} />

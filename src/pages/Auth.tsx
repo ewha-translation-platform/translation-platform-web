@@ -2,10 +2,11 @@ import { useContext } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
-import UserContext from "../contexts/UserContext";
-import userService from "../services/userService";
+import { InputField } from "@/components/common";
+import { UserContext } from "@/contexts";
+import { userService } from "@/services";
 
-type Inputs = {
+type Fields = {
   id: number;
   password: string;
 };
@@ -13,62 +14,82 @@ type Inputs = {
 function Auth() {
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);
-  const { register, handleSubmit } = useForm<Inputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
-    userService.getOne(0).then((user) => setUser(user));
-    navigate("/");
+  const { register, handleSubmit } = useForm<Fields>();
+  const onSubmit: SubmitHandler<Fields> = (data) => {
+    alert("개발 모드에서는 지원하지 않습니다.");
   };
 
+  async function devAuth(isProfessor: boolean) {
+    if (isProfessor) {
+      const prof = await userService.getOne(0);
+      setUser(prof);
+    } else {
+      const student = await userService.getOne(1);
+      setUser(student);
+    }
+    navigate("/");
+  }
+
   return (
-    <main className="container max-w-sm m-auto p-8 bg-gray-100 rounded-b-lg shadow-md flex flex-col gap-4 border-t-4 border-primary-base">
-      <h2 className="text-2xl text-center text-primary font-semibold mb-4">
-        로그인
-      </h2>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-3 justify-center"
-      >
-        <input
-          type="text"
-          inputMode="numeric"
-          {...register("id")}
-          placeholder="학번 / 교번"
-          className="form-styling p-4"
-        />
-        <input
-          type="password"
-          {...register("password", { required: true })}
-          placeholder="비밀번호"
-          className="form-styling p-4"
-        />
-        <section className="flex gap-3">
-          <input
-            type="submit"
-            value="로그인"
-            className="btn btn-primary flex-grow"
+    <div className="h-screen grid place-content-center">
+      <main className="max-w-sm p-8 pt-8 bg-gray-100 rounded-b-lg shadow-md border-t-4 border-primary flex flex-col gap-8">
+        <h2 className="text-center font-semibold">로그인 - Dev</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2">
+          <InputField
+            label="학번 / 교번"
+            type="text"
+            inputMode="numeric"
+            {...register("id")}
+            disabled
           />
-          <button className="btn btn-secondary">회원가입</button>
+          <InputField
+            label="비밀번호"
+            type="password"
+            {...register("password", { required: true })}
+            disabled
+          />
+          <section className="flex justify-evenly gap-2">
+            <button
+              onClick={() => devAuth(true)}
+              className="btn bg-primary text-white hover:bg-opacity-70"
+            >
+              교수용 로그인
+            </button>
+            <button
+              onClick={() => devAuth(false)}
+              className="btn bg-secondary-500 text-white hover:bg-opacity-70"
+            >
+              학생용 로그인
+            </button>
+          </section>
+          {/* <section className="flex gap-2">
+            <input
+              type="submit"
+              value="로그인"
+              className="flex-grow btn bg-primary text-white"
+            />
+            <button className="btn bg-secondary-500 text-white">
+              회원가입
+            </button>
+          </section> */}
+          <button className="text-blue-500 underline font-semibold" disabled>
+            비밀번호를 잊으셨나요?
+          </button>
+        </form>
+        <section>
+          <p className="text-center">소셜 계정으로 로그인</p>
+          <ul className="flex justify-evenly gap-1">
+            {["Google", "Naver", "Kakao", "Apple"].map((e) => (
+              <li key={e}>
+                <button className="btn bg-secondary-500 text-white" disabled>
+                  {e}
+                </button>
+              </li>
+            ))}
+          </ul>
         </section>
-        <button className="block text-lg font-semibold">
-          비밀번호를 잊으셨나요?
-        </button>
-      </form>
-      <section className="text-center">
-        <p>
-          회원이 아니신가요? <button>회원가입</button>
-        </p>
-      </section>
-      <section className="flex flex-col gap-4">
-        <div className="text-center">또는</div>
-        <ul className="flex justify-evenly gap-1">
-          {["Google", "Naver", "Kakao", "Apple"].map((e) => (
-            <li key={e} className="btn bg-secondary">
-              {e}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }
 

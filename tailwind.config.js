@@ -1,5 +1,14 @@
 const colors = require("tailwindcss/colors");
 
+function withOpacityValue(variable) {
+  return ({ opacityValue }) => {
+    if (opacityValue === undefined) {
+      return `rgb(var(${variable}))`;
+    }
+    return `rgb(var(${variable}) / ${opacityValue})`;
+  };
+}
+
 module.exports = {
   content: ["./src/**/*.tsx"],
   theme: {
@@ -9,7 +18,7 @@ module.exports = {
         sidebar: "var(--sidebar-width)",
       },
       colors: {
-        primary: "var(--primary-color)",
+        primary: withOpacityValue("--primary-color"),
         secondary: colors.neutral,
         danger: colors.red[700],
       },
