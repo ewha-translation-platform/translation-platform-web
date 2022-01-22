@@ -39,7 +39,12 @@ interface Course {
   name: string;
 }
 type CourseModel = Course;
-type CourseDto = Omit<CourseModel, "id">;
+interface CreateCourseDto {
+  year: number;
+  semester: Semester;
+  code: string;
+  name: string;
+}
 
 interface Class {
   id: number;
@@ -55,7 +60,12 @@ interface ClassModel {
   studentIds: number[];
   professorIds: number[];
 }
-type ClassDto = Omit<ClassModel, "id">;
+interface CreateClassDto {
+  courseId: number;
+  classNumber: number;
+  studentIds: number[];
+  professorIds: number[];
+}
 
 interface Region {
   start: number;

@@ -3,7 +3,7 @@ import { InputField } from "./common";
 
 interface CourseModalProps {
   visible: boolean;
-  onSubmit: (data: { code: string; name: string }) => void;
+  onSubmit: (code: string, name: string) => void;
   onCancel: () => void;
 }
 function CourseModal({ visible, onSubmit, onCancel }: CourseModalProps) {
@@ -12,13 +12,13 @@ function CourseModal({ visible, onSubmit, onCancel }: CourseModalProps) {
   return (
     <section
       className={`z-20 absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 ${
-        visible ? "flex" : "hidden"
-      } justify-center items-center`}
+        visible ? "grid" : "hidden"
+      } place-content-center`}
     >
       <form
         className="w-md bg-white p-4 rounded-md shadow-xl grid grid-cols-2 gap-2"
-        onSubmit={handleSubmit((data) => {
-          onSubmit(data);
+        onSubmit={handleSubmit(({ code, name }) => {
+          onSubmit(code, name);
           reset();
         })}
       >

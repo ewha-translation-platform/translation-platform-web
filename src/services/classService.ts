@@ -20,7 +20,7 @@ export const classService = {
       ...rests,
     });
   },
-  async postOne(classDto: ClassDto): Promise<Class> {
+  async postOne(classDto: CreateClassDto): Promise<Class> {
     const newClass: ClassModel = {
       id: classes.length,
       ...classDto,
@@ -41,7 +41,7 @@ export const courseService = {
   async getOne(id: number): Promise<Course> {
     return Promise.resolve(courses[id]);
   },
-  async postOne(course: CourseDto): Promise<Course> {
+  async postOne(course: CreateCourseDto): Promise<Course> {
     const newCourse = { id: courses.length, ...course };
     courses.push(newCourse);
     return Promise.resolve(newCourse);
