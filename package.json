@@ -11,6 +11,9 @@
     "cheerio": "^1.0.0-rc.10",
     "chroma-js": "^2.1.2",
     "craco": "^0.0.3",
+    "eslint": "^8.7.0",
+    "eslint-config-react-app": "^7.0.0",
+    "eslint-loader": "^4.0.2",
     "hangul-js": "^0.2.6",
     "jszip": "^3.7.1",
     "papaparse": "^5.3.1",
@@ -35,8 +38,7 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {
