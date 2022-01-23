@@ -219,7 +219,7 @@ function SubmissionWithFeedback() {
         </button>
       </nav>
       <section className="grid grid-cols-[1fr_20rem] gap-2">
-        <section className="grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-2">
+        <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <article className="flex flex-col">
             <h3>원문</h3>
             {submission.assignment.assignmentType !== "translate" && (
