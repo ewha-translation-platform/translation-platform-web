@@ -3,19 +3,19 @@ import chroma from "chroma-js";
 import JSZip from "jszip";
 import {
   ChangeEvent,
+  RefCallback,
   useCallback,
   useEffect,
-  useReducer,
-  useRef,
   useState,
 } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import WaveSurfer from "wavesurfer.js";
-import RegionsPlugin from "wavesurfer.js/src/plugin/regions";
 import { Checkbox, InputField, Select, TextArea } from "@/components/common";
+import { RecorderModal } from "@/components";
 import { assignmentService } from "@/services";
-import { colorScheme } from "@/utils";
+import { toast } from "react-toastify";
+import { useForceUpdate } from "@/hooks";
 
 const assignmentTypeOptions = [
   { label: "번역", value: "translate" },
@@ -24,22 +24,18 @@ const assignmentTypeOptions = [
 ];
 
 function AssignmentForm() {
-  const forceUpdate = useReducer((x) => x + 1, 0)[1];
   const { assignmentId } = useParams();
   const navigate = useNavigate();
-  const [waveSurfer, setWaveSurfer] = useState<WaveSurfer | null>(null);
   const { register, handleSubmit, watch, setValue, reset } =
-    useForm<AssignmentDto>({
+    useForm<CreateAssignmentDto>({
       defaultValues: {
         assignmentType: "translate",
         isPublic: false,
         dueDateTime: new Date().toISOString().slice(0, -8),
-        feedbackCategoryIds: [],
-        sequentialRegions: [],
       },
     });
   const watchAssignmentType = watch("assignmentType");
-  const watchSequentialRegions = watch("sequentialRegions");
+  const watchAudioFile = watch("audioFile", new Blob());
 
   useEffect(() => {
     if (assignmentId !== "new") {
@@ -50,20 +46,19 @@ function AssignmentForm() {
     }
   }, [assignmentId, reset]);
 
-  const onSubmit: SubmitHandler<AssignmentDto> = (data) => {
+  const onSubmit: SubmitHandler<CreateAssignmentDto> = ({
+    audioFile,
+    ...data
+  }) => {
     assignmentService
       .postOne({
         ...data,
+        audioFile: undefined,
         weekNumber: +data.weekNumber,
-        sequentialRegions: waveSurfer
-          ? Object.values(waveSurfer.regions.list).map(({ start, end }) => ({
-              start,
-              end,
-            }))
-          : [],
+        sequentialRegions: [],
       })
-      .then(() => alert("저장되었습니다."))
-      .catch((e) => alert(`오류가 발생했습니다 ${e}`));
+      .then(() => toast.success("저장되었습니다."))
+      .catch((e) => toast.error(`오류가 발생했습니다 ${e}`));
   };
 
   const handleFileInput = useCallback(
@@ -98,43 +93,11 @@ function AssignmentForm() {
     [setValue]
   );
 
-  const wavesurferContainer = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (watchAssignmentType === "translate") setWaveSurfer(null);
-    if (!waveSurfer && wavesurferContainer.current) {
-      const waveSurfer = WaveSurfer.create({
-        container: wavesurferContainer.current,
-        waveColor: chroma("#00462A").alpha(0.5).hex(),
-        progressColor: "#00462A",
-        plugins: [
-          RegionsPlugin.create({
-            dragSelection: true,
-            slop: 5,
-            regions: watchSequentialRegions.map(({ start, end }, idx) => ({
-              id: idx.toString(),
-              start,
-              end,
-            })),
-          }),
-        ],
-      });
-      setWaveSurfer(waveSurfer);
-      waveSurfer.load("/examples/simultaneous.m4a");
-      waveSurfer.on("region-update-end", forceUpdate);
-    }
-  }, [
-    wavesurferContainer,
-    watchAssignmentType,
-    forceUpdate,
-    watchSequentialRegions,
-    waveSurfer,
-  ]);
-
   return (
-    <main className="p-4 space-y-4">
+    <main className="p-4 grid grid-rows-[auto_minmax(0,100%)] overflow-auto">
       <h2>{assignmentId === "new" ? "과제 추가" : "과제 수정"}</h2>
       <form
-        className="grid sm:grid-cols-2 gap-2"
+        className="grid max-w-5xl sm:grid-cols-2 grid-rows-[1fr_auto] gap-4"
         onSubmit={handleSubmit(onSubmit)}
       >
         <section className="grid grid-cols-4 gap-2 auto-rows-min">
@@ -177,82 +140,24 @@ function AssignmentForm() {
           />
         </section>
         {watchAssignmentType === "translate" ? (
-          <section>
-            <TextArea
-              label="원문"
-              rows={25}
-              innerClassName="resize-none h-full"
-              {...register("textFile", { required: true })}
-            ></TextArea>
-            <input type="file" accept=".txt,.docx" onChange={handleFileInput} />
-          </section>
+          <Translation />
+        ) : watchAssignmentType === "sequential" ? (
+          // <Sequential />
+          <span>준비중입니다.</span>
         ) : (
-          <section className="space-y-2">
-            <span className="h-full">
-              원음
-              <div ref={wavesurferContainer}></div>
-            </span>
-            {waveSurfer && (
-              <>
-                <section className="flex gap-1">
-                  {Object.values(waveSurfer.regions.list).map((r, idx) => (
-                    <button
-                      className="btn-sm text-white"
-                      key={r.id}
-                      style={{ backgroundColor: colorScheme(idx) }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        r.play();
-                      }}
-                    >
-                      구간{idx + 1}
-                    </button>
-                  ))}
-                </section>
-                <section className="flex gap-2">
-                  <button
-                    className="btn bg-primary text-white mr-auto"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      waveSurfer.playPause();
-                    }}
-                  >
-                    재생 / 일시정지
-                  </button>
-                  <button
-                    className="btn bg-danger text-white"
-                    onClick={() => {
-                      if (!window.confirm("구간을 전부 삭제합니다.")) return;
-                      waveSurfer.regions.clear();
-                    }}
-                  >
-                    전체 삭제
-                  </button>
-                  <button
-                    className="btn rounded-full bg-blue-500 text-white"
-                    onClick={() => {
-                      console.log(waveSurfer.regions.list);
-                      waveSurfer.regions.add({ id: "0", start: 1, end: 2 });
-                    }}
-                  >
-                    구간 추가
-                  </button>
-                </section>
-              </>
-            )}
-            <input type="file" accept="audio/*" placeholder="원음" />
-            <Select
-              label="다시 듣기 제한"
-              {...register("maxPlayCount", { required: true })}
-              options={[{ label: "무제한", value: "0" }]}
-            />
-          </section>
+          <Simultaneous
+            audioFile={
+              watchAudioFile !== undefined
+                ? new Blob([watchAudioFile], { type: "audio/ogg; codecs=opus" })
+                : new Blob([])
+            }
+            handleAudioFileChange={(data) => setValue("audioFile", data)}
+          />
         )}
         <section className="col-span-full flex gap-2">
           <button
             className="btn bg-secondary-500 text-white"
             onClick={() => {
-              waveSurfer?.destroy();
               navigate("..");
             }}
           >
@@ -270,6 +175,181 @@ function AssignmentForm() {
       </form>
     </main>
   );
+
+  function Translation() {
+    return (
+      <section className="flex flex-col gap-2">
+        <TextArea
+          label="원문"
+          className="flex-grow"
+          innerClassName="resize-none h-full"
+          {...register("textFile", { required: true })}
+        ></TextArea>
+        <input type="file" accept=".txt,.docx" onChange={handleFileInput} />
+      </section>
+    );
+  }
+
+  function Simultaneous({
+    audioFile,
+    handleAudioFileChange,
+  }: {
+    audioFile: Blob;
+    handleAudioFileChange: (data: Blob) => void;
+  }) {
+    const forceUpdate = useForceUpdate();
+    const [recorderOpened, setRecorderOpened] = useState(false);
+    const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
+
+    const audioContainerRef: RefCallback<HTMLDivElement> = useCallback(
+      (node) => {
+        if (node) {
+          const waveSurfer = WaveSurfer.create({
+            container: node,
+            waveColor: chroma("#00462A").alpha(0.5).hex(),
+            progressColor: "#00462A",
+            // plugins: [
+            //   RegionsPlugin.create({
+            //     dragSelection: true,
+            //     slop: 5,
+            //     regions: watchSequentialRegions?.map(({ start, end }, idx) => ({
+            //       id: idx.toString(),
+            //       start,
+            //       end,
+            //     })),
+            //   }),
+            // ],
+          });
+          waveSurfer.load(URL.createObjectURL(audioFile));
+          waveSurfer.on("ready", forceUpdate);
+          setWaveSurfer(waveSurfer);
+        }
+      },
+      [forceUpdate, audioFile]
+    );
+
+    const handleSave = (data: Blob) => {
+      setRecorderOpened(false);
+      handleAudioFileChange(data);
+      toast.success("저장되었습니다.");
+    };
+
+    return (
+      <>
+        <section className="flex flex-col gap-2">
+          <span>원음</span>
+          <div ref={audioContainerRef}></div>
+          {waveSurfer?.isReady && (
+            <section className="flex gap-2">
+              <button
+                className="btn bg-primary text-white mr-auto"
+                onClick={(e) => {
+                  e.preventDefault();
+                  waveSurfer.playPause();
+                }}
+              >
+                재생 / 일시정지
+              </button>
+            </section>
+          )}
+          <section className="flex gap-2">
+            <input
+              className="flex-grow"
+              type="file"
+              accept="audio/*"
+              placeholder="원음"
+              disabled
+            />
+            <button
+              className="btn bg-danger text-white"
+              onClick={(e) => {
+                e.preventDefault();
+                setRecorderOpened(true);
+              }}
+            >
+              녹음하기
+            </button>
+          </section>
+          <Select
+            label="다시 듣기 제한"
+            {...register("maxPlayCount", { required: true })}
+            options={[{ label: "무제한", value: "0" }]}
+          />
+        </section>
+        {recorderOpened && <RecorderModal onSave={handleSave} />}
+      </>
+    );
+  }
+
+  // function Sequential() {
+  //   return (
+  //     <section className="flex flex-col gap-2">
+  //       <span>원음</span>
+  //       <div ref={wavesurferContainer}></div>
+  //       {waveSurfer && (
+  //         <>
+  //           <section className="flex gap-1">
+  //             {Object.values(waveSurfer.regions.list).map((r, idx) => (
+  //               <button
+  //                 className="btn-sm text-white"
+  //                 key={r.id}
+  //                 style={{ backgroundColor: colorScheme(idx) }}
+  //                 onClick={(e) => {
+  //                   e.preventDefault();
+  //                   r.play();
+  //                 }}
+  //               >
+  //                 구간{idx + 1}
+  //               </button>
+  //             ))}
+  //             <button
+  //               className="btn-sm bg-danger text-white"
+  //               onClick={() => {
+  //                 if (!window.confirm("구간을 전부 삭제합니다.")) return;
+  //                 waveSurfer.regions.clear();
+  //               }}
+  //             >
+  //               전체 삭제
+  //             </button>
+  //           </section>
+  //           <section className="flex gap-2">
+  //             <button
+  //               className="btn bg-primary text-white mr-auto"
+  //               onClick={(e) => {
+  //                 e.preventDefault();
+  //                 waveSurfer.playPause();
+  //               }}
+  //             >
+  //               재생 / 일시정지
+  //             </button>
+  //           </section>
+  //         </>
+  //       )}
+  //       <section className="flex gap-2">
+  //         <input
+  //           className="flex-grow"
+  //           type="file"
+  //           accept="audio/*"
+  //           placeholder="원음"
+  //         />
+  //         <button
+  //           className="btn bg-danger text-white"
+  //           onClick={(e) => {
+  //             e.preventDefault();
+  //             alert("녹음을 시작합니다");
+  //           }}
+  //         >
+  //           녹음하기
+  //         </button>
+  //       </section>
+  //       <Select
+  //         label="다시 듣기 제한"
+  //         {...register("maxPlayCount", { required: true })}
+  //         options={[{ label: "무제한", value: "0" }]}
+  //       />
+  //     </section>
+  //   );
+  // }
 }
 
 export default AssignmentForm;

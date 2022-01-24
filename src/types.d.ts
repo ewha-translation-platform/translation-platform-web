@@ -100,12 +100,26 @@ interface AssignmentModel {
   maxScore: number;
   feedbackCategoryIds: number[];
   textFile: string;
-  audioFile?: any;
+  audioFile?: Blob;
   sequentialRegions: Region[];
   maxPlayCount: number;
   playbackRate: number;
 }
-type AssignmentDto = Omit<AssignmentModel, "id">;
+interface CreateAssignmentDto {
+  classId: number;
+  name: string;
+  description: string;
+  weekNumber: number;
+  dueDateTime: string;
+  assignmentType: AssignmentType;
+  isPublic: boolean;
+  maxScore: number;
+  textFile: string;
+  audioFile?: Blob;
+  sequentialRegions?: Region[];
+  maxPlayCount?: number;
+  playbackRate?: number;
+}
 
 interface Submission {
   id: number;

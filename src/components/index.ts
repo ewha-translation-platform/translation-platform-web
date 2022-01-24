@@ -6,6 +6,7 @@ import Header from "./Header";
 import Highlightable from "./Highlightable";
 import NewItemCard from "./NewItemCard";
 import Sidebar from "./Sidebar";
+import RecorderModal from "./RecorderModal";
 
 export {
   AssignmentCard,
@@ -16,4 +17,5 @@ export {
   Highlightable,
   NewItemCard,
   Sidebar,
+  RecorderModal,
 };

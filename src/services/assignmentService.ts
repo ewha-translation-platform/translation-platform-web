@@ -24,10 +24,14 @@ const assignmentService = {
     });
   },
 
-  async postOne(assignmentDto: AssignmentDto) {
+  async postOne(dto: CreateAssignmentDto) {
     const newAssignment: AssignmentModel = {
       id: assignments.length,
-      ...assignmentDto,
+      feedbackCategoryIds: [],
+      sequentialRegions: [],
+      maxPlayCount: 0,
+      playbackRate: 1.0,
+      ...dto,
     };
     assignments.push(newAssignment);
     return Promise.resolve(newAssignment);
