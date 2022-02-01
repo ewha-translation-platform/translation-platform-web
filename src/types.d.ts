@@ -3,9 +3,14 @@ interface Option<V = string | number> {
   value: V;
 }
 
-type AssignmentType = "translate" | "simultaneous" | "sequential";
-type Semester = "spring" | "summer" | "fall" | "winter";
-type Role = "professor" | "assistant" | "student";
+type AssignmentType = "TRANSLATION" | "SIMULTANEOUS" | "SEQUENTIAL";
+type Semester = "SPRING" | "SUMMER" | "FALL" | "WINTER";
+type Role = "PROFESSOR" | "ASSISTANT" | "STUDENT";
+
+interface Region {
+  start: number;
+  end: number;
+}
 
 interface College {
   id: number;
@@ -23,54 +28,50 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
-  collegeName: string;
-  departmentName: string;
+  department: string;
+  college: string;
+  role: Role;
   isAdmin: boolean;
+}
+interface CreateUserDto {
+  academicId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
   role: Role;
 }
-type UserModel = User;
-type UserDto = Omit<UserModel, "id">;
+type UpdateUserDto = Omit<CreateUserDto, "academicId">;
 
 interface Course {
   id: number;
   year: number;
   semester: Semester;
+  department: string;
+  college: string;
   code: string;
   name: string;
 }
-type CourseModel = Course;
 interface CreateCourseDto {
   year: number;
   semester: Semester;
+  departmentId: number;
   code: string;
   name: string;
 }
+type UpdateCourseDto = Partial<CreateCourseDto>;
 
 interface Class {
   id: number;
   course: Course;
   classNumber: number;
-  students: User[];
-  professors: User[];
-}
-interface ClassModel {
-  id: number;
-  courseId: number;
-  classNumber: number;
-  studentIds: number[];
-  professorIds: number[];
 }
 interface CreateClassDto {
-  courseId: number;
+  courseId: Integer;
   classNumber: number;
-  studentIds: number[];
-  professorIds: number[];
 }
+type UpdateClassDto = Partial<CreateClassDto>;
 
-interface Region {
-  start: number;
-  end: number;
-}
 interface Assignment {
   id: number;
   classId: number;
@@ -83,27 +84,11 @@ interface Assignment {
   maxScore: number;
   feedbackCategories: FeedbackCategory[];
   textFile: string;
-  audioFile?: any;
-  sequentialRegions: Region[];
-  maxPlayCount: number;
-  playbackRate: number;
-}
-interface AssignmentModel {
-  id: number;
-  classId: number;
-  name: string;
-  description: string;
-  weekNumber: number;
-  dueDateTime: string;
-  assignmentType: AssignmentType;
-  isPublic: boolean;
-  maxScore: number;
-  feedbackCategoryIds: number[];
-  textFile: string;
-  audioFile?: Blob;
-  sequentialRegions: Region[];
-  maxPlayCount: number;
-  playbackRate: number;
+
+  audioFile: Blob | null;
+  sequentialRegions: Region[] | null;
+  maxPlayCount: number | null;
+  playbackRate: number | null;
 }
 interface CreateAssignmentDto {
   classId: number;
@@ -114,98 +99,89 @@ interface CreateAssignmentDto {
   assignmentType: AssignmentType;
   isPublic: boolean;
   maxScore: number;
+  feedbackCategoryIds: number[];
   textFile: string;
-  audioFile?: Blob;
-  sequentialRegions?: Region[];
-  maxPlayCount?: number;
-  playbackRate?: number;
+
+  audioFile: Blob | null;
+  sequentialRegions: Region[] | null;
+  maxPlayCount: number | null;
+  playbackRate: number | null;
 }
+type UpdateAssignmentDto = Partial<CreateAssignmentDto>;
 
 interface Submission {
   id: number;
   student: User;
   assignment: Assignment;
   textFile: string;
-  audioFile?: any;
-  playCount: number;
-  playbackRate: number;
-  generalReview: string;
-  score: number;
-  isGraded: boolean;
-  isTemporal: boolean;
   feedbacks: Feedback[];
-}
+  score: number | null;
+  staged: boolean;
+  generalReview: string | null;
+  graded: boolean;
 
-interface SubmissionModel {
-  id: number;
-  studentId: number;
-  assignmentId: number;
-  textFile: string;
-  audioFile?: any;
-  playCount: number;
-  playbackRate: number;
-  generalReview: string;
-  score: number;
-  isGraded: boolean;
-  isTemporal: boolean;
-  feedbackIds: number[];
+  audioFile: Blob | null;
+  playCount: number | null;
+  playbackRate: number | null;
 }
 interface CreateSubmissionDto {
   studentId: number;
   assignmentId: number;
   textFile: string;
-  audioFile?: any;
-  playCount: number;
-  playbackRate: number;
-  isTemporal: boolean;
-}
-interface PutSubmissionDto {
-  id: number;
-  textFile?: string;
-  audioFile?: any;
-  playCount?: number;
-  playbackRate?: number;
-  generalReview?: string;
-  score?: number;
-  isGraded?: boolean;
-  feedbackIds?: number[];
-}
+  staged: boolean;
 
+  audioFile: Blob | null;
+  playCount: number | null;
+  playbackRate: number | null;
+}
+type UpdateSubmissionDto = Partial<{
+  textFile: string;
+  staged: boolean;
+  generalReview: string | null;
+  score: boolean | null;
+  feedbackIds: number[];
+  graded: boolean;
+
+  audioFile: Blob | null;
+  playCount: number | null;
+  playbackRate: number | null;
+}>;
 interface SubmissionStatus {
   academicId: string;
   submissionId: number | null;
   firstName: string;
   lastName: string;
   isGraded: boolean;
-  submissionDateTime: string;
-  playCount: number;
+  submissionDateTime: string | null;
+  playCount: number | null;
 }
 
 interface FeedbackCategory {
   id: number;
   name: string;
 }
-type FeedbackCategoryModel = feedbackCategory;
-type FeedbackCategoryDto = Omit<FeedbackCategoryModel, "id">;
+interface CreateFeedbackCategoryDto {
+  name: string;
+}
+type UpdateFeedbackCategoryDto = Partial<CreateFeedbackCategoryDto>;
 
 interface Feedback {
   id: number;
   submissionId: number;
   professor: User;
   selectedIdx: Region;
-  selectedOrigin: boolean;
-  comment: string;
+  selectedSourceText: boolean;
+  comment: string | null;
   categories: FeedbackCategory[];
-  isTemporal: boolean;
+  staged: boolean;
 }
-interface FeedbackModel {
-  id: number;
+interface CreateFeedbackDto {
   submissionId: number;
   professorId: number;
   selectedIdx: Region;
-  selectedOrigin: boolean;
-  comment: string;
+  selectedSourceText: boolean;
+  comment: string | null;
   categoryIds: number[];
-  isTemporal: boolean;
+  staged: boolean;
 }
-type FeedbackDto = Omit<FeedbackModel, "id">;
+type UpdateFeedbackDto = Partial<CreateFeedbackDto>;
