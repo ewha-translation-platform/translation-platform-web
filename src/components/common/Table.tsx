@@ -1,21 +1,24 @@
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/outline";
-import { useState } from "react";
+import { ReactElement, useState } from "react";
 
-interface TableProps<T extends Object> {
+type ElementRenderer<T> = (x: T) => ReactElement;
+type StringRenderer<T> = (x: T) => string;
+
+export interface TableProps<T extends Record<string, any>> {
   labels: string[];
-  columns: (keyof T | ((row: T) => string))[];
+  columns: (keyof T | ElementRenderer<T> | StringRenderer<T>)[];
   data: T[];
   onClick?: (d: T) => void;
 }
 
-function Table<T>({
+function Table<T extends Record<string, any>>({
   labels,
   columns,
   data,
   onClick: handleClick,
 }: TableProps<T>) {
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof T | ((row: T) => string) | null;
+    key: keyof T | ElementRenderer<T> | StringRenderer<T> | null;
     isAscending: boolean;
   }>({ key: columns[0], isAscending: true });
 
@@ -31,24 +34,32 @@ function Table<T>({
     }
   });
 
+  function isElementRenderer(
+    f: keyof T | ElementRenderer<T> | StringRenderer<T>
+  ): f is ElementRenderer<T> {
+    if (data.length === 0) return false;
+    return typeof f === "function" && typeof f(data[0]) !== "string";
+  }
+
   return (
     <table className="bg-white shadow-md text-center border-collapse select-none">
       <thead>
         <tr>
-          <th className="p-2 border">번호</th>
           {labels.map((label, idx) => (
             <th
               className="relative p-2 px-8 cursor-pointer border"
               key={idx}
-              onClick={() =>
+              onClick={() => {
+                const key = columns[idx];
+                if (isElementRenderer(key)) return;
                 setSortConfig((oldConfig) => ({
-                  key: columns[idx],
+                  key,
                   isAscending:
                     oldConfig.key === columns[idx]
                       ? !oldConfig.isAscending
                       : false,
-                }))
-              }
+                }));
+              }}
             >
               {label}
               {sortConfig.isAscending ? (
@@ -79,7 +90,6 @@ function Table<T>({
               handleClick && handleClick(d);
             }}
           >
-            <td className="p-2">{idx + 1}</td>
             {columns.map((col, idx) => (
               <td className="p-2" key={idx}>
                 {typeof col === "function" ? col(d) : d[col]}
