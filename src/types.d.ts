@@ -20,11 +20,16 @@ interface College {
 interface Department {
   id: number;
   name: string;
+  college: College;
 }
+interface CreateDepartmentDto {
+  name: string;
+  collegeName: string;
+}
+type UpdateDepartmentDto = Partial<CreateDepartmentDto>;
 
 interface User {
-  id: number;
-  academicId: string;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -34,21 +39,20 @@ interface User {
   isAdmin: boolean;
 }
 interface CreateUserDto {
-  academicId: string;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   role: Role;
 }
-type UpdateUserDto = Omit<CreateUserDto, "academicId">;
+type UpdateUserDto = Omit<CreateUserDto, "id">;
 
 interface Course {
   id: number;
   year: number;
   semester: Semester;
-  department: string;
-  college: string;
+  department: Department & { college: College };
   code: string;
   name: string;
 }
@@ -67,8 +71,10 @@ interface Class {
   classNumber: number;
 }
 interface CreateClassDto {
-  courseId: Integer;
+  courseId: number;
   classNumber: number;
+  studentIds: string[];
+  professorIds: string[];
 }
 type UpdateClassDto = Partial<CreateClassDto>;
 
@@ -125,7 +131,7 @@ interface Submission {
   playbackRate: number | null;
 }
 interface CreateSubmissionDto {
-  studentId: number;
+  studentId: string;
   assignmentId: number;
   textFile: string;
   staged: boolean;
@@ -147,11 +153,11 @@ type UpdateSubmissionDto = Partial<{
   playbackRate: number | null;
 }>;
 interface SubmissionStatus {
-  academicId: string;
+  studentId: string;
   submissionId: number | null;
   firstName: string;
   lastName: string;
-  isGraded: boolean;
+  graded: boolean;
   submissionDateTime: string | null;
   playCount: number | null;
 }
@@ -177,7 +183,7 @@ interface Feedback {
 }
 interface CreateFeedbackDto {
   submissionId: number;
-  professorId: number;
+  professorId: string;
   selectedIdx: Region;
   selectedSourceText: boolean;
   comment: string | null;

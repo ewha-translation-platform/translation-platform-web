@@ -1,139 +1,76 @@
-import { users } from "./userService";
+import httpService from "./httpService";
 
 export const classService = {
   async getAll(): Promise<Class[]> {
-    return Promise.resolve(
-      classes.map(({ courseId, professorIds, studentIds, ...rests }) => ({
-        course: courses[courseId],
-        professors: professorIds.map((id) => users[id]),
-        students: studentIds.map((id) => users[id]),
-        ...rests,
-      }))
-    );
+    const { data } = await httpService.get<Class[]>("classes");
+    return data;
   },
+
   async getOne(id: number): Promise<Class> {
-    const { courseId, professorIds, studentIds, ...rests } = classes[id];
-    return Promise.resolve({
-      course: courses[courseId],
-      professors: professorIds.map((id) => users[id]),
-      students: studentIds.map((id) => users[id]),
-      ...rests,
-    });
+    const { data } = await httpService.get<Class>(`classes/${id}`);
+    return data;
   },
-  async postOne(classDto: CreateClassDto): Promise<Class> {
-    const newClass: ClassModel = {
-      id: classes.length,
-      ...classDto,
-    };
-    classes.push(newClass);
-    return Promise.resolve(await this.getOne(newClass.id));
+
+  async postOne(createClassDto: CreateClassDto) {
+    const { data } = await httpService.post<Class>("classes", createClassDto);
+    return data;
   },
-  async deleteOne(targetId: number): Promise<boolean> {
-    classes = classes.filter(({ id }) => id !== targetId);
-    return Promise.resolve(true);
+
+  async patchOne(id: number, updateClassDto: UpdateClassDto) {
+    const { data } = await httpService.patch<Class>(
+      `classes/${id}`,
+      updateClassDto
+    );
+    return data;
+  },
+
+  async deleteOne(id: number) {
+    const { data } = await httpService.delete<Class>(`classes/${id}`);
+    return data;
+  },
+
+  async getStudents(id: number) {
+    const { data } = await httpService.get<User[]>(`classes/${id}/students`);
+    return data;
+  },
+
+  async getAssignments(id: number) {
+    const { data } = await httpService.get<Assignment[]>(
+      `classes/${id}/assignments`
+    );
+    return data;
   },
 };
 
 export const courseService = {
   async getAll(): Promise<Course[]> {
-    return Promise.resolve(courses);
+    const { data: courses } = await httpService.get<Course[]>("courses");
+    return courses;
   },
+
   async getOne(id: number): Promise<Course> {
-    return Promise.resolve(courses[id]);
+    const { data: course } = await httpService.get<Course>(`courses/${id}`);
+    return course;
   },
-  async postOne(course: CreateCourseDto): Promise<Course> {
-    const newCourse = { id: courses.length, ...course };
-    courses.push(newCourse);
-    return Promise.resolve(newCourse);
+
+  async postOne(createCourseDto: CreateCourseDto) {
+    const { data: course } = await httpService.post<Course>(
+      "courses",
+      createCourseDto
+    );
+    return course;
+  },
+
+  async patchOne(id: number, updateCourseDto: UpdateCourseDto) {
+    const { data: course } = await httpService.patch<Course>(
+      `courses/${id}`,
+      updateCourseDto
+    );
+    return course;
+  },
+
+  async deleteOne(id: number) {
+    const { data: course } = await httpService.delete<Course>(`courses/${id}`);
+    return course;
   },
 };
-
-let courses: CourseModel[] = [
-  {
-    id: 0,
-    name: "[영] 문학번역",
-    code: "[학수번호]",
-    year: 2022,
-    semester: "fall",
-  },
-  {
-    id: 1,
-    name: "[영] 기술번역",
-    code: "[학수번호]",
-    year: 2022,
-    semester: "spring",
-  },
-  {
-    id: 2,
-    name: "[일] 문학번역",
-    code: "[학수번호]",
-    year: 2022,
-    semester: "fall",
-  },
-  {
-    id: 3,
-    name: "[일] 기술번역",
-    code: "[학수번호]",
-    year: 2022,
-    semester: "spring",
-  },
-  {
-    id: 4,
-    name: "[중] 문학번역",
-    code: "[학수번호]",
-    year: 2022,
-    semester: "fall",
-  },
-  {
-    id: 5,
-    name: "[중] 기술번역",
-    code: "[학수번호]",
-    year: 2022,
-    semester: "spring",
-  },
-];
-
-export let classes: ClassModel[] = [
-  {
-    id: 0,
-    courseId: 0,
-    classNumber: 1,
-    studentIds: [1, 2, 3],
-    professorIds: [0],
-  },
-  {
-    id: 1,
-    courseId: 1,
-    classNumber: 1,
-    studentIds: [1, 2, 3],
-    professorIds: [0],
-  },
-  {
-    id: 2,
-    courseId: 2,
-    classNumber: 1,
-    studentIds: [1, 2, 3],
-    professorIds: [0],
-  },
-  {
-    id: 3,
-    courseId: 3,
-    classNumber: 1,
-    studentIds: [1, 2, 3],
-    professorIds: [0],
-  },
-  {
-    id: 4,
-    courseId: 4,
-    classNumber: 1,
-    studentIds: [1, 2, 3],
-    professorIds: [0],
-  },
-  {
-    id: 5,
-    courseId: 5,
-    classNumber: 1,
-    studentIds: [1, 2, 3],
-    professorIds: [0],
-  },
-];

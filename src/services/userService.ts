@@ -1,72 +1,32 @@
+import httpService from "./httpService";
+
 const userService = {
   async getAll(): Promise<User[]> {
-    return Promise.resolve(users);
+    const { data: users } = await httpService.get<User[]>("users");
+    return users;
   },
-  async getOne(id: number): Promise<User> {
-    return Promise.resolve(users[id]);
+
+  async getOne(id: string): Promise<User> {
+    const { data: user } = await httpService.get<User>(`users/${id}`);
+    return user;
   },
-  async postMany(userDtos: UserDto[]): Promise<User[]> {
-    const newUsers = await Promise.all(
-      userDtos.map(async (userDto) => await this.postOne(userDto))
+
+  async postMany(createUserDtos: CreateUserDto[]): Promise<User[]> {
+    const users = await Promise.all(
+      createUserDtos.map(async (createUserDto) => {
+        const { data: user } = await httpService.post<User>(
+          "users",
+          createUserDto
+        );
+        return user;
+      })
     );
-    return Promise.resolve(newUsers);
+    return users;
   },
-  async postOne(userDto: UserDto): Promise<User> {
-    const oldUser = users.find((u) => u.academicId === userDto.academicId);
-    if (oldUser) {
-      return Promise.resolve(oldUser);
-    } else {
-      const newUser = { id: users.length, ...userDto };
-      users.push(newUser);
-      return Promise.resolve(newUser);
-    }
+
+  async postOne(createUserDto: CreateUserDto): Promise<User> {
+    const { data: user } = await httpService.post<User>("users", createUserDto);
+    return user;
   },
 };
 export default userService;
-
-export let users: UserModel[] = [
-  {
-    id: 0,
-    academicId: "2022000000",
-    collegeName: "통역번역대학원",
-    departmentName: "한일통역전공",
-    email: "test@test.com",
-    firstName: "화연",
-    lastName: "이",
-    isAdmin: false,
-    role: "professor",
-  },
-  {
-    id: 1,
-    academicId: "2022111111",
-    collegeName: "통역번역대학원",
-    departmentName: "한일통역전공",
-    email: "test@test.com",
-    firstName: "이화1",
-    lastName: "김",
-    isAdmin: false,
-    role: "student",
-  },
-  {
-    id: 2,
-    academicId: "2022111112",
-    collegeName: "통역번역대학원",
-    departmentName: "한일통역전공",
-    email: "test@test.com",
-    firstName: "이화2",
-    lastName: "김",
-    isAdmin: false,
-    role: "student",
-  },
-  {
-    id: 3,
-    academicId: "2022111113",
-    collegeName: "통역번역대학원",
-    departmentName: "한일통역전공",
-    email: "test@test.com",
-    firstName: "이화3",
-    lastName: "김",
-    isAdmin: false,
-    role: "student",
-  },
-];

@@ -9,7 +9,11 @@ interface FeedbackCardProps {
   onMouseEnter: MouseEventHandler;
   onMouseLeave: MouseEventHandler;
   onDelete: (id: number) => void;
-  onSave: (targetId: number, comment: string, categoryIds: number[]) => void;
+  onSave: (
+    targetId: number,
+    comment: string | null,
+    categoryIds: number[]
+  ) => void;
   onCreateCategory: (name: string) => Promise<FeedbackCategory>;
 }
 
@@ -47,7 +51,7 @@ function FeedbackCard({
         label="코멘트"
         innerClassName="resize-none"
         rows={2}
-        value={comment}
+        value={comment || ""}
         onChange={(e) => {
           setIsDirty(true);
           setComment(e.target.value);

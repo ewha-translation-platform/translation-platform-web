@@ -5,22 +5,20 @@ import { classService } from "@/services";
 
 function Students() {
   const { classId } = useParams<{ classId: string }>();
-  const [classInfo, setClassInfo] = useState<Class | null>();
+  const [students, setStudents] = useState<User[]>();
 
   useEffect(() => {
-    classService.getOne(+classId!).then((data) => {
-      setClassInfo(data);
-    });
+    classService.getStudents(+classId!).then(setStudents);
   }, [classId]);
 
   return (
     <main className="p-4">
       <h2>수강생 목록</h2>
-      {classInfo && (
+      {students && (
         <Table
           labels={["학번", "단과대학", "학과", "이름"]}
-          columns={["academicId", "collegeName", "departmentName", "lastName"]}
-          data={classInfo.students}
+          columns={["id", "college", "department", "lastName"]}
+          data={students}
         ></Table>
       )}
     </main>

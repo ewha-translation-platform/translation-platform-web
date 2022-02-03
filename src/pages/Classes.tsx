@@ -74,10 +74,10 @@ function Classes() {
               key={item.id}
               classInfo={item}
               onDelete={() => handleDelete(item.id)}
-              displayActions={user?.role === "professor"}
+              displayActions={user?.role === "PROFESSOR"}
             />
           ))}
-        {user?.role === "professor" && <NewItemCard />}
+        {user?.role === "PROFESSOR" && <NewItemCard />}
       </ul>
     </main>
   );

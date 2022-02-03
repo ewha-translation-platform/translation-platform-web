@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { TextArea } from "@/components/common";
@@ -9,25 +9,28 @@ import { UserContext } from "@/contexts";
 function Submission() {
   const { user } = useContext(UserContext);
   const { assignmentId } = useParams<{ assignmentId: string }>();
+  const audioFile = useRef<Blob | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const {
     register,
     handleSubmit,
     reset,
     formState: { isDirty, isSubmitting },
-  } = useForm<CreateSubmissionDto>({
+  } = useForm<Omit<CreateSubmissionDto, "audioFile">>({
     defaultValues: {
       studentId: user!.id,
       textFile: "",
-      playCount: 0,
-      playbackRate: 1,
-      isTemporal: true,
+      staged: false,
     },
   });
 
-  async function temporalSubmit(data: CreateSubmissionDto) {
+  async function temporalSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
     try {
-      await submissionService.postOne({ ...data, isTemporal: true });
+      await submissionService.postOne({
+        ...data,
+        audioFile: audioFile.current,
+        staged: false,
+      });
       toast.success("임시저장되었습니다.");
       reset(data);
     } catch (e) {
@@ -35,9 +38,15 @@ function Submission() {
     }
   }
 
-  async function nonTemporalSubmit(data: CreateSubmissionDto) {
+  async function nonTemporalSubmit(
+    data: Omit<CreateSubmissionDto, "audioFile">
+  ) {
     try {
-      await submissionService.postOne({ ...data, isTemporal: false });
+      await submissionService.postOne({
+        ...data,
+        audioFile: audioFile.current,
+        staged: true,
+      });
       toast.success("제출되었습니다.");
       reset(data);
     } catch (e) {
@@ -55,7 +64,7 @@ function Submission() {
   return (
     <main className="p-4 max-w-5xl grid grid-rows-[min-content_1fr_min-content] gap-2">
       <h2 className="col-span-full">과제 제출</h2>
-      {assignment.assignmentType === "translate" ? (
+      {assignment.assignmentType === "TRANSLATION" ? (
         <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <TextArea
             label="원문"

@@ -21,10 +21,10 @@ function Auth() {
 
   async function devAuth(isProfessor: boolean) {
     if (isProfessor) {
-      const prof = await userService.getOne(0);
+      const prof = await userService.getOne("2022000000");
       setUser(prof);
     } else {
-      const student = await userService.getOne(1);
+      const student = await userService.getOne("2022000001");
       setUser(student);
     }
     navigate("/");

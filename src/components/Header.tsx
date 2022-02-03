@@ -21,7 +21,7 @@ function Header() {
       <span className="hidden sm:inline">
         {user?.lastName}
         {user?.firstName}
-        {user?.role === "professor" ? " 교수" : ""}님 환영합니다!
+        {user?.role === "PROFESSOR" ? " 교수" : ""}님 환영합니다!
       </span>
       <button
         className="btn-sm bg-white bg-opacity-30 hover:bg-opacity-20"

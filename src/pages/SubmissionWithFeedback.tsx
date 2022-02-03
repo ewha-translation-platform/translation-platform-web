@@ -1,24 +1,24 @@
-import { PlusIcon } from "@heroicons/react/solid";
-import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Pie } from "react-chartjs-2";
-import { useParams } from "react-router-dom";
 import { FeedbackCard, Highlightable } from "@/components";
 import { UserContext } from "@/contexts";
+import { useSubmissionReducer } from "@/hooks";
 import {
   feedbackCategoryService,
   feedbackService,
   submissionService,
 } from "@/services";
 import { colorScheme } from "@/utils";
-import { useSubmissionReducer } from "@/hooks";
+import { PlusIcon } from "@heroicons/react/solid";
+import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Pie } from "react-chartjs-2";
+import { useParams } from "react-router-dom";
 
 function SubmissionWithFeedback() {
   const { user } = useContext(UserContext);
   const { submissionId } = useParams<{ submissionId: string }>();
   const [submission, dispatch] = useSubmissionReducer();
   const [highlightedRegions, setHighlightedRegions] = useState<
-    { color: string; start: number; end: number; selectedOrigin: boolean }[]
+    { color: string; start: number; end: number; selectedSourceText: boolean }[]
   >([]);
   const feedbackListRef = useRef<HTMLUListElement>(null);
 
@@ -28,18 +28,20 @@ function SubmissionWithFeedback() {
       const result = await submissionService.getOne(+submissionId!);
       dispatch({ type: "SET", payload: result });
       setHighlightedRegions(
-        result.feedbacks.map(({ categories, selectedIdx, selectedOrigin }) => ({
-          color:
-            categories.length === 1
-              ? colorScheme(
-                  result.assignment.feedbackCategories.findIndex(
-                    (c) => c.id === categories[0].id
+        result.feedbacks.map(
+          ({ categories, selectedIdx, selectedSourceText }) => ({
+            color:
+              categories.length === 1
+                ? colorScheme(
+                    result.assignment.feedbackCategories.findIndex(
+                      (c) => c.id === categories[0].id
+                    )
                   )
-                )
-              : colorScheme("danger"),
-          selectedOrigin,
-          ...selectedIdx,
-        }))
+                : colorScheme("danger"),
+            selectedSourceText,
+            ...selectedIdx,
+          })
+        )
       );
     })();
   }, [submissionId, dispatch]);
@@ -76,13 +78,13 @@ function SubmissionWithFeedback() {
     };
   }, [submission]);
 
-  function handleSelectFactory(selectedOrigin: boolean) {
+  function handleSelectFactory(selectedSourceText: boolean) {
     return async ({ start, end }: Region) => {
       if (!submission) return;
       if (start === end) return;
       if (
         submission.feedbacks
-          .filter((f) => f.selectedOrigin === selectedOrigin)
+          .filter((f) => f.selectedSourceText === selectedSourceText)
           .find(({ selectedIdx: { start: s, end: e } }) => s < end && start < e)
       ) {
         alert("중복된 영억을 선택할 수 없습니다.");
@@ -91,16 +93,21 @@ function SubmissionWithFeedback() {
 
       const newFeedback = await feedbackService.postOne({
         selectedIdx: { start, end },
-        selectedOrigin,
+        selectedSourceText,
         categoryIds: [],
         comment: "",
         professorId: user!.id,
         submissionId: submission.id,
-        isTemporal: true,
+        staged: false,
       });
       dispatch({ type: "ADD_FEEDBACK", payload: newFeedback });
       setHighlightedRegions([
-        { color: colorScheme("default"), start, end, selectedOrigin },
+        {
+          color: colorScheme("default"),
+          start,
+          end,
+          selectedSourceText: selectedSourceText,
+        },
       ]);
       feedbackListRef.current?.scrollBy({
         behavior: "smooth",
@@ -112,13 +119,13 @@ function SubmissionWithFeedback() {
   function handleMouseEnter({
     categories,
     selectedIdx,
-    selectedOrigin,
+    selectedSourceText,
   }: Feedback) {
     if (!submission) return;
     setHighlightedRegions([
       {
         color: getColor(categories),
-        selectedOrigin,
+        selectedSourceText,
         ...selectedIdx,
       },
     ]);
@@ -127,10 +134,9 @@ function SubmissionWithFeedback() {
   function handleMouseLeave() {
     setHighlightedRegions(
       submission?.feedbacks.map(
-        ({ categories, selectedIdx, selectedOrigin }) => ({
+        ({ categories, selectedIdx, selectedSourceText }) => ({
           color: getColor(categories),
-
-          selectedOrigin,
+          selectedSourceText,
           ...selectedIdx,
         })
       ) ?? []
@@ -157,15 +163,15 @@ function SubmissionWithFeedback() {
 
   async function handleSaveFeedback(
     targetId: number,
-    comment: string,
+    comment: string | null,
     categoryIds: number[]
   ) {
     dispatch({
-      type: "PUT_FEEDBACK",
+      type: "PATCH_FEEDBACK",
       payload: { targetId, comment, categoryIds },
     });
     try {
-      await feedbackService.putOne(targetId, { comment, categoryIds });
+      await feedbackService.patchOne(targetId, { comment, categoryIds });
       alert("저장되었습니다.");
     } catch (error) {
       alert(`에러가 발생하였습니다. ${error}`);
@@ -208,8 +214,7 @@ function SubmissionWithFeedback() {
           className="btn bg-primary text-white hover:opacity-80"
           onClick={(e) => {
             e.preventDefault();
-            submissionService.putOne({
-              id: submission.id,
+            submissionService.patchOne(submission.id, {
               generalReview: submission.generalReview,
               feedbackIds: submission.feedbacks.map((f) => f.id),
             });
@@ -222,28 +227,28 @@ function SubmissionWithFeedback() {
         <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <article className="flex flex-col">
             <h3>원문</h3>
-            {submission.assignment.assignmentType !== "translate" && (
+            {submission.assignment.assignmentType !== "TRANSLATION" && (
               <audio controls className="w-full"></audio>
             )}
             <Highlightable
               className="flex-grow"
               text={submission.assignment.textFile}
               highlightedRegions={highlightedRegions.filter(
-                ({ selectedOrigin }) => selectedOrigin
+                ({ selectedSourceText: selectedOrigin }) => selectedOrigin
               )}
               onSelect={handleSelectFactory(true)}
             />
           </article>
           <article className="flex flex-col">
             <h3>번역문</h3>
-            {submission.assignment.assignmentType !== "translate" && (
+            {submission.assignment.assignmentType !== "TRANSLATION" && (
               <audio controls className="w-full"></audio>
             )}
             <Highlightable
               className="flex-grow"
               text={submission.textFile}
               highlightedRegions={highlightedRegions.filter(
-                ({ selectedOrigin }) => !selectedOrigin
+                ({ selectedSourceText: selectedOrigin }) => !selectedOrigin
               )}
               onSelect={handleSelectFactory(false)}
             />
@@ -259,7 +264,7 @@ function SubmissionWithFeedback() {
               <FeedbackCard
                 key={feedback.id}
                 feedback={feedback}
-                selectedText={(feedback.selectedOrigin
+                selectedText={(feedback.selectedSourceText
                   ? submission.assignment.textFile
                   : submission.textFile
                 ).slice(feedback.selectedIdx.start, feedback.selectedIdx.end)}
@@ -289,7 +294,7 @@ function SubmissionWithFeedback() {
             onChange={(e) =>
               dispatch({ type: "SET_GENERAL_REVIEW", payload: e.target.value })
             }
-            value={submission.generalReview}
+            value={submission.generalReview || ""}
           ></textarea>
         </section>
         <section className="grid place-content-center">

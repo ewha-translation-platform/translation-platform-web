@@ -29,13 +29,13 @@ function AssignmentForm() {
   const { register, handleSubmit, watch, setValue, reset } =
     useForm<CreateAssignmentDto>({
       defaultValues: {
-        assignmentType: "translate",
+        assignmentType: "TRANSLATION",
         isPublic: false,
         dueDateTime: new Date().toISOString().slice(0, -8),
       },
     });
-  const watchAssignmentType = watch("assignmentType");
-  const watchAudioFile = watch("audioFile", new Blob());
+  const watchAssignmentType = watch("assignmentType", "TRANSLATION");
+  const watchAudioFile = watch("audioFile", null);
 
   useEffect(() => {
     if (assignmentId !== "new") {
@@ -53,7 +53,7 @@ function AssignmentForm() {
     assignmentService
       .postOne({
         ...data,
-        audioFile: undefined,
+        audioFile: null,
         weekNumber: +data.weekNumber,
         sequentialRegions: [],
       })
@@ -139,16 +139,18 @@ function AssignmentForm() {
             {...register("isPublic")}
           />
         </section>
-        {watchAssignmentType === "translate" ? (
+        {watchAssignmentType === "TRANSLATION" ? (
           <Translation />
-        ) : watchAssignmentType === "sequential" ? (
+        ) : watchAssignmentType === "SEQUENTIAL" ? (
           // <Sequential />
           <span>준비중입니다.</span>
         ) : (
           <Simultaneous
             audioFile={
               watchAudioFile !== undefined
-                ? new Blob([watchAudioFile], { type: "audio/ogg; codecs=opus" })
+                ? new Blob([watchAudioFile || ""], {
+                    type: "audio/ogg; codecs=opus",
+                  })
                 : new Blob([])
             }
             handleAudioFileChange={(data) => setValue("audioFile", data)}

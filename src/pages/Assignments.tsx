@@ -1,10 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import { AssignmentCard, NewItemCard } from "../components";
 import { UserContext } from "@/contexts";
-import { assignmentService } from "@/services";
+import { assignmentService, classService } from "@/services";
+import { useParams } from "react-router-dom";
 
 function Assignments() {
   const currentWeek = 0;
+  const { classId } = useParams<{ classId: string }>();
   const { user } = useContext(UserContext);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const assignmentsByWeekNumber = [...Array(16)].map((_, idx) =>
@@ -12,8 +14,8 @@ function Assignments() {
   );
 
   useEffect(() => {
-    assignmentService.getAll().then((data) => setAssignments(data));
-  }, []);
+    classService.getAssignments(+classId!).then(setAssignments);
+  }, [classId]);
 
   function handleDelete(targetId: number) {
     setAssignments(assignments.filter(({ id }) => id !== targetId));
@@ -32,11 +34,11 @@ function Assignments() {
                 <AssignmentCard
                   key={item.id}
                   assignment={item}
-                  displayActions={user?.role === "professor"}
+                  displayActions={user?.role === "PROFESSOR"}
                   onDelete={() => handleDelete(item.id)}
                 />
               ))}
-          {user?.role === "professor" && <NewItemCard />}
+          {user?.role === "PROFESSOR" && <NewItemCard />}
         </ul>
       </section>
       {assignmentsByWeekNumber.map((assignments, idx) => (
@@ -49,7 +51,7 @@ function Assignments() {
                   <AssignmentCard
                     key={item.id}
                     assignment={item}
-                    displayActions={user?.role === "professor"}
+                    displayActions={user?.role === "PROFESSOR"}
                     onDelete={() => handleDelete(item.id)}
                   />
                 ))}

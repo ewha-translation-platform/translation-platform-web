@@ -4,8 +4,12 @@ type Action =
   | { type: "SET"; payload: Submission }
   | { type: "ADD_FEEDBACK"; payload: Feedback }
   | {
-      type: "PUT_FEEDBACK";
-      payload: { targetId: number; comment: string; categoryIds: number[] };
+      type: "PATCH_FEEDBACK";
+      payload: {
+        targetId: number;
+        comment: string | null;
+        categoryIds: number[];
+      };
     }
   | { type: "DELETE_FEEDBACK"; payload: number }
   | { type: "ADD_CATEGORY"; payload: FeedbackCategory }
@@ -20,7 +24,7 @@ function reducer(submission: Submission | null, action: Action) {
         ...submission,
         feedbacks: [...submission.feedbacks, action.payload],
       };
-    case "PUT_FEEDBACK":
+    case "PATCH_FEEDBACK":
       return {
         ...submission,
         feedbacks: submission.feedbacks.map((f) =>

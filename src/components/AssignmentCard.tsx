@@ -21,7 +21,7 @@ function AssignmentCard({
   const handleClick = () => {
     navigate(
       `/assignments/${assignment.id}/submissions${
-        user?.role === "student" ? "/my" : ""
+        user?.role === "STUDENT" ? "/my" : ""
       }`
     );
   };

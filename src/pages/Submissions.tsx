@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Table } from "@/components/common";
 import { assignmentService } from "@/services";
+import { toast } from "react-toastify";
+import SelectableTable from "@/components/SelectableTable";
 
 function Submissions() {
   const navigate = useNavigate();
@@ -9,34 +11,66 @@ function Submissions() {
   const [submissionStatuses, setSubmissionStatuses] = useState<
     SubmissionStatus[]
   >([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
   useEffect(() => {
     assignmentService
       .getSubmissionStatuses(+assignmentId!)
-      .then((statuses) => setSubmissionStatuses(statuses));
+      .then(setSubmissionStatuses);
   }, [assignmentId]);
+
+  function handleToggle({ studentId }: SubmissionStatus) {
+    setSelectedStudentIds((ids) => {
+      if (ids.includes(studentId)) return ids.filter((id) => id !== studentId);
+      else {
+        if (ids.length === 2) return [studentId];
+        else return [...ids, studentId];
+      }
+    });
+  }
 
   return (
     <main className="p-4 space-y-4">
-      <h2>제출 목록</h2>
-      <section className="overflow-y-auto">
+      <section className="flex justify-between">
+        <h2>제출 목록</h2>
+      </section>
+      <section className="flex flex-col items-start gap-4">
         {submissionStatuses && (
-          <Table
+          <SelectableTable
+            getSelected={(row) => selectedStudentIds.includes(row.studentId)}
+            toggleSelect={handleToggle}
             labels={["학번", "이름", "상태", "제출일시", "채점", "횟수"]}
             columns={[
-              "academicId",
+              "studentId",
               ({ lastName, firstName }) => `${lastName}${firstName}`,
               ({ submissionId }) => (submissionId === null ? "미제출" : "제출"),
-              "submissionDateTime",
-              ({ isGraded }) => (isGraded ? "완료" : "미완료"),
-              ({ playCount }) => `${playCount}회`,
+              ({ submissionDateTime }) =>
+                submissionDateTime
+                  ? new Date(Date.parse(submissionDateTime)).toLocaleString()
+                  : "",
+              ({ graded }) => (graded ? "완료" : "미완료"),
+              ({ playCount }) => (playCount ? `${playCount}회` : "해당없음"),
             ]}
             data={submissionStatuses}
             onClick={({ submissionId }) =>
-              navigate(`/submissions/${submissionId}`)
+              submissionId
+                ? navigate(`/submissions/${submissionId}`)
+                : toast.error("제출물이 없어 이동할 수 없습니다.")
             }
-          ></Table>
+          ></SelectableTable>
         )}
+        <button
+          className="btn bg-primary text-white"
+          disabled={selectedStudentIds.length !== 2}
+          onClick={() => {
+            const arr = submissionStatuses
+              .map((s) => s.studentId)
+              .filter((id) => selectedStudentIds.includes(id));
+            toast.info(`compare ${arr}`);
+          }}
+        >
+          비교
+        </button>
       </section>
     </main>
   );

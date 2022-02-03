@@ -1,25 +1,41 @@
 import Papa from "papaparse";
-import { ChangeEvent, useContext, useEffect, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import XLSX from "xlsx";
 import { CourseModal } from "@/components";
-import { Select, Table } from "@/components/common";
+import { Select, Table, CreatableSelect } from "@/components/common";
 import { semesterOptions, yearOptions } from "@/utils";
 import { classService, courseService, userService } from "@/services";
 import { UserContext } from "@/contexts";
 import { toast } from "react-toastify";
+import departmentService from "@/services/departmentService";
 
 function ClassForm() {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const { classId } = useParams<{ classId: string }>();
 
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseModalVisible, setCourseModalVisible] = useState(false);
 
-  const [year, setYear] = useState<number>(new Date().getFullYear());
-  const [semester, setSemester] = useState<Semester>("spring");
+  const [department, setDepartment] = useState<Department | null>(null);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [semester, setSemester] = useState<Semester>("SPRING");
+
+  const filteredCourses = useMemo(
+    () =>
+      courses.filter(
+        (course) =>
+          department &&
+          course.department.id === department.id &&
+          course.year === year &&
+          course.semester === semester
+      ),
+    [courses, year, semester, department]
+  );
+
   const [students, setStudents] = useState<User[]>([]);
 
   const {
@@ -27,34 +43,19 @@ function ClassForm() {
     setValue,
     handleSubmit,
     reset,
-    watch,
     formState: { isSubmitting },
   } = useForm<CreateClassDto>({
-    defaultValues: {
-      courseId: 0,
-      classNumber: 1,
-      professorIds: [user?.id],
-      studentIds: [],
-    },
+    defaultValues: { courseId: 0, classNumber: 1 },
   });
-  const watchStudentIds = watch("studentIds");
-  useEffect(() => {
-    (async function () {
-      const students = await Promise.all(
-        watchStudentIds.map(userService.getOne)
-      );
-      setStudents(students);
-    })();
-  }, [watchStudentIds]);
-
-  const filteredCourses = courses.filter(
-    (course) => course.year === year && course.semester === semester
-  );
 
   useEffect(() => {
     (async function () {
+      const departments = await departmentService.getAll();
+      setDepartments(departments);
+
       const courses = await courseService.getAll();
       setCourses(courses);
+
       if (classId !== "new") {
         const classInfo = await classService.getOne(+classId!);
         setYear(classInfo.course.year);
@@ -66,27 +67,31 @@ function ClassForm() {
 
   async function handleFileInput(e: ChangeEvent<HTMLInputElement>) {
     function complete({ data }: Papa.ParseResult<string>) {
-      Promise.all(
-        data.slice(1, -1).map(async (d) => {
-          const userDto: UserDto = {
-            email: d[6],
-            collegeName: d[1],
-            departmentName: d[2],
-            lastName: d[4],
-            firstName: d[4],
-            academicId: d[3],
-            isAdmin: false,
-            role: "student",
-          };
-          const createdUser = await userService.postOne(userDto);
-          return createdUser;
-        })
-      ).then((students) =>
-        setValue(
-          "studentIds",
-          students.map((s) => s.id)
-        )
+      setValue(
+        "studentIds",
+        data.slice(1, -1).map((d) => d[3])
       );
+      // Promise.all(
+      //   data.slice(1, -1).map(async (d) => {
+      //     const createUserDto: CreateUserDto = {
+      //       email: d[6],
+      //       password: d[3],
+      //       lastName: d[4],
+      //       firstName: d[4],
+      //       id: d[3],
+      //       role: "STUDENT",
+      //       // college: d[1],
+      //       // department: d[2],
+      //     };
+      //     const createdUser = await userService.postOne(createUserDto);
+      //     return createdUser;
+      //   })
+      // ).then((students) =>
+      //   setValue(
+      //     "studentIds",
+      //     students.map((s) => s.id)
+      //   )
+      // );
     }
     if (!e.target.files) return;
     const file = e.target.files[0];
@@ -109,14 +114,19 @@ function ClassForm() {
   }
 
   async function handlePostCourse(code: string, name: string) {
+    if (!department) {
+      return toast.warning("개설학과를 선택해주세요.");
+    }
     try {
       const newCourse = await courseService.postOne({
         code,
         name,
         year,
         semester,
+        departmentId: department.id,
       });
       setCourseModalVisible(false);
+      setCourses((courses) => [...courses, newCourse]);
       setValue("courseId", newCourse.id);
       toast.success("강의가 성공적으로 등록되었습니다.");
     } catch (e) {
@@ -135,7 +145,7 @@ function ClassForm() {
   }
 
   return (
-    <main className="p-4 max-w-5xl grid sm:grid-rows-[auto_minmax(0,100%)] sm:grid-cols-2 gap-4">
+    <main className="p-4 max-w-5xl grid sm:grid-rows-[auto_minmax(0,100%)] sm:grid-cols-3 gap-4">
       <nav className="col-span-full flex gap-2">
         <h2 className="mr-auto">
           {classId === "new" ? "새 강의 분반 추가" : "강의 분반 편집"}
@@ -155,20 +165,66 @@ function ClassForm() {
         </button>
       </nav>
       <section className="space-y-2">
-        <Select
-          label="연도"
-          disabled={classId !== "new"}
-          onChange={(e) => setYear(+e.target.value)}
-          value={year}
-          options={yearOptions.slice(1)}
-        />
-        <Select
-          label="학기"
-          disabled={classId !== "new"}
-          onChange={(e) => setSemester(e.target.value as Semester)}
-          value={semester}
-          options={semesterOptions.slice(1)}
-        />
+        <div className="grid grid-cols-2 gap-2">
+          <Select
+            label="연도"
+            disabled={classId !== "new"}
+            onChange={(e) => {
+              setYear(+e.target.value);
+            }}
+            value={year}
+            options={yearOptions.slice(1)}
+          />
+          <Select
+            label="학기"
+            disabled={classId !== "new"}
+            onChange={(e) => {
+              setSemester(e.target.value as Semester);
+            }}
+            value={semester}
+            options={semesterOptions.slice(1)}
+          />
+        </div>
+        <label className="flex flex-col gap-1">
+          개설학과
+          <CreatableSelect<Option<number>, false>
+            options={departments.map(({ id, name }) => ({
+              value: id,
+              label: name,
+            }))}
+            placeholder=""
+            onCreateOption={async (newDepartmentName) => {
+              if (
+                window.confirm(
+                  `학과 "${newDepartmentName}"을(를) 추가하시겠습니까?`
+                )
+              ) {
+                try {
+                  const department = await departmentService.postOne({
+                    name: newDepartmentName,
+                    collegeName: "통역번역대학원",
+                  });
+                  setDepartments((depts) => [...depts, department]);
+                  setDepartment(department);
+                  toast.success("학과를 추가하였습니다.");
+                } catch (e) {
+                  toast.error(JSON.stringify(e));
+                }
+              }
+            }}
+            onChange={(newValue) => {
+              setDepartment(
+                newValue && departments.find((d) => d.id === newValue.value)!
+              );
+            }}
+            value={
+              department && {
+                value: department.id,
+                label: department.name,
+              }
+            }
+          />
+        </label>
         <div className="grid grid-cols-[1fr_auto] items-end gap-2">
           <Select
             label="강의"
@@ -180,7 +236,8 @@ function ClassForm() {
             }))}
           />
           <button
-            className="py-2 px-4 bg-primary text-white rounded-md border border-primary hover:opacity-70"
+            className="py-2 px-4 bg-primary text-white rounded-md border border-primary hover:opacity-70 disabled:hover:opacity-30"
+            disabled={!department}
             onClick={() => setCourseModalVisible(true)}
           >
             새 강의 추가
@@ -195,22 +252,22 @@ function ClassForm() {
             label: `${idx + 1}분반`,
           }))}
         />
-        <Select
+        {/* <Select
           label="담당교수"
           {...register("professorIds")}
           disabled
           options={[
             { label: user!.lastName + user!.firstName, value: user!.id },
           ]}
-        />
+        /> */}
       </section>
-      <section className="flex flex-col gap-2">
+      <section className="sm:col-span-2 flex flex-col gap-2">
         <label>수강생 명단</label>
         <div className="min-h-[16rem] bg-white rounded-md shadow-lg overflow-auto hidden-scrollbar">
           {students.length !== 0 ? (
             <Table
               labels={["단과대학", "학과", "이름", "비고"]}
-              columns={["collegeName", "departmentName", "lastName", "role"]}
+              columns={["college", "department", "lastName", "role"]}
               data={students}
             />
           ) : (
