@@ -1,8 +1,7 @@
-import Checkbox from "./Checkbox";
-import CreatableSelect from "./CreatableSelect";
-import InputField from "./InputField";
-import Select from "./Select";
-import Table from "./Table";
-import TextArea from "./TextArea";
-
-export { Checkbox, CreatableSelect, InputField, Select, Table, TextArea };
+export { default as Checkbox } from "./Checkbox";
+export { default as CreatableSelect } from "./CreatableSelect";
+export { default as InputField } from "./InputField";
+export { default as MultiSelect } from "./MultiSelect";
+export { default as Select } from "./Select";
+export { default as Table } from "./Table";
+export { default as TextArea } from "./TextArea";
