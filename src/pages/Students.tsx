@@ -17,7 +17,12 @@ function Students() {
       {students && (
         <Table
           labels={["학번", "단과대학", "학과", "이름"]}
-          columns={["id", "college", "department", "lastName"]}
+          columns={[
+            "id",
+            "college",
+            "department",
+            ({ firstName, lastName }) => `${lastName}${firstName}`,
+          ]}
           data={students}
         ></Table>
       )}
