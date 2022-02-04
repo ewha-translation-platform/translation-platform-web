@@ -28,5 +28,12 @@ const userService = {
     const { data: user } = await httpService.post<User>("users", createUserDto);
     return user;
   },
+
+  async findProfessorsWithName(name: string): Promise<User[]> {
+    const { data: users } = await httpService.get<User[]>("users", {
+      params: { name, role: "PROFESSOR" },
+    });
+    return users;
+  },
 };
 export default userService;
