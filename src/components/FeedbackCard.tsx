@@ -1,5 +1,6 @@
 import { MouseEventHandler, useState } from "react";
 import { CreatableSelect, TextArea } from "./common";
+import { XIcon } from "@heroicons/react/outline";
 
 interface FeedbackCardProps {
   readonly feedback: Feedback;
@@ -41,11 +42,20 @@ function FeedbackCard({
 
   return (
     <li
-      className={`flex flex-col gap-2 rounded-md shadow-md p-4 hover:cursor-pointer hover:shadow-none transition-shadow`}
+      className={`relative flex flex-col gap-2 rounded-md shadow-md p-4 hover:cursor-pointer hover:shadow-none transition-shadow overflow-hidden`}
       style={{ backgroundColor }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      <button
+        className="absolute top-0 right-0 h-8 w-8 p-1 rounded-bl-lg bg-danger text-white hover:bg-red-500"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete(feedback.id);
+        }}
+      >
+        <XIcon />
+      </button>
       <p>{selectedText}</p>
       <TextArea
         label="코멘트"
@@ -74,15 +84,6 @@ function FeedbackCard({
         isSearchable
       />
       <section className="flex items-center justify-end gap-2">
-        <button
-          className="btn bg-danger text-white"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete(feedback.id);
-          }}
-        >
-          삭제
-        </button>
         {isDirty && (
           <button
             className="btn bg-primary text-white"
