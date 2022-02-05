@@ -1,21 +1,10 @@
-import AssignmentCard from "./AssignmentCard";
-import ClassCard from "./ClassCard";
-import CourseModal from "./CourseModal";
-import FeedbackCard from "./FeedbackCard";
-import Header from "./Header";
-import Highlightable from "./Highlightable";
-import NewItemCard from "./NewItemCard";
-import Sidebar from "./Sidebar";
-import RecorderModal from "./RecorderModal";
-
-export {
-  AssignmentCard,
-  ClassCard,
-  CourseModal,
-  FeedbackCard,
-  Header,
-  Highlightable,
-  NewItemCard,
-  Sidebar,
-  RecorderModal,
-};
+export { default as AssignmentCard } from "./AssignmentCard";
+export { default as ClassCard } from "./ClassCard";
+export { default as CourseModal } from "./CourseModal";
+export { default as FeedbackCard } from "./FeedbackCard";
+export { default as Header } from "./Header";
+export { default as Highlightable } from "./Highlightable";
+export { default as NewItemCard } from "./NewItemCard";
+export { default as Sidebar } from "./Sidebar";
+export { default as RecorderModal } from "./RecorderModal";
+export { default as FeedbackCategoryChart } from "./FeedbackCategoryChart";

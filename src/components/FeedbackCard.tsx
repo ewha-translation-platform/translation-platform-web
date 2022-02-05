@@ -1,20 +1,22 @@
-import { MouseEventHandler, useState } from "react";
+import { MouseEventHandler } from "react";
 import { CreatableSelect, TextArea } from "./common";
 import { XIcon } from "@heroicons/react/outline";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 interface FeedbackCardProps {
-  readonly feedback: Feedback;
+  feedback: Feedback;
   selectedText: string;
   backgroundColor: string;
   categories: FeedbackCategory[];
   onMouseEnter: MouseEventHandler;
   onMouseLeave: MouseEventHandler;
   onDelete: (id: number) => void;
-  onSave: (
-    targetId: number,
+  onChangeFeedback: (
+    feedbackId: number,
     comment: string | null,
     categoryIds: number[]
-  ) => void;
+  ) => Promise<void>;
   onCreateCategory: (name: string) => Promise<FeedbackCategory>;
 }
 
@@ -26,14 +28,26 @@ function FeedbackCard({
   onMouseEnter: handleMouseEnter = () => {},
   onMouseLeave: handleMouseLeave = () => {},
   onDelete: handleDelete,
-  onSave: handleSave,
+  onChangeFeedback: handleChangeFeedback,
   onCreateCategory: handleCreateCategory,
 }: FeedbackCardProps) {
-  const [isDirty, setIsDirty] = useState(false);
-  const [comment, setComment] = useState(feedback.comment);
-  const [categoryIds, setCategoryIds] = useState<number[]>(
-    feedback.categories.map((c) => c.id)
-  );
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { isDirty, isSubmitting },
+  } = useForm<{ comment: string }>({
+    defaultValues: { comment: feedback.comment || "" },
+  });
+  const onSubmit: SubmitHandler<{ comment: string }> = async ({ comment }) => {
+    await handleChangeFeedback(
+      feedback.id,
+      comment,
+      feedback.categories.map(({ id }) => id)
+    );
+    reset({ comment });
+    toast.success("코멘트가 적용되었습니다.");
+  };
 
   const categoryOptions = categories.map((c) => ({
     value: c.id,
@@ -42,13 +56,13 @@ function FeedbackCard({
 
   return (
     <li
-      className={`relative flex flex-col gap-2 overflow-hidden rounded-md p-4 shadow-md transition-shadow hover:cursor-pointer hover:shadow-none`}
+      className={`relative flex max-w-full flex-col gap-2 p-3 shadow-md transition-shadow hover:shadow-none`}
       style={{ backgroundColor }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <button
-        className="absolute top-0 right-0 h-8 w-8 rounded-bl-lg bg-danger p-1 text-white hover:bg-red-500"
+        className="bg-danger absolute top-0 right-0 h-6 w-6 rounded-bl-md p-1 text-white hover:bg-red-500"
         onClick={(e) => {
           e.stopPropagation();
           handleDelete(feedback.id);
@@ -56,47 +70,46 @@ function FeedbackCard({
       >
         <XIcon />
       </button>
-      <p>{selectedText}</p>
-      <TextArea
-        label="코멘트"
-        innerClassName="resize-none"
-        rows={2}
-        value={comment || ""}
-        onChange={(e) => {
-          setIsDirty(true);
-          setComment(e.target.value);
-        }}
-      ></TextArea>
+      <p className="mt-3">{selectedText}</p>
       <CreatableSelect<Option<number>, true>
-        value={categoryOptions.filter((c) => categoryIds.includes(c.value))}
-        onChange={(newValue) => {
-          setIsDirty(true);
-          setCategoryIds(newValue.map((v) => v.value));
+        value={categoryOptions.filter((c) =>
+          feedback.categories.map(({ id }) => id).includes(c.value)
+        )}
+        onChange={async (newValue) => {
+          await handleChangeFeedback(
+            feedback.id,
+            feedback.comment,
+            newValue.map((v) => v.value)
+          );
         }}
         onCreateOption={async (value) => {
           const { id: newId } = await handleCreateCategory(value);
-          setCategoryIds((ids) => [...ids, newId]);
-          setIsDirty(true);
+          await handleChangeFeedback(feedback.id, feedback.comment, [
+            ...feedback.categories.map(({ id }) => id),
+            newId,
+          ]);
         }}
         options={categoryOptions}
-        classNamePrefix="react-select"
+        placeholder="카테고리를 선택하세요"
         isMulti
         isSearchable
       />
-      <section className="flex items-center justify-end gap-2">
-        {isDirty && (
-          <button
-            className="btn bg-primary text-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSave(feedback.id, comment, categoryIds);
-              setIsDirty(false);
-            }}
-          >
-            저장
-          </button>
-        )}
-      </section>
+      <form className="flex flex-col" onSubmit={handleSubmit(onSubmit)}>
+        <TextArea
+          label=""
+          placeholder="코멘트를 입력하세요"
+          innerClassName="resize-none"
+          rows={3}
+          {...register("comment")}
+        ></TextArea>
+        <button
+          type="submit"
+          className={`btn bg-primary text-white ${isDirty ? "" : "hidden"}`}
+          disabled={isSubmitting}
+        >
+          적용
+        </button>
+      </form>
     </li>
   );
 }

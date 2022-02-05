@@ -1,4 +1,8 @@
-import { FeedbackCard, Highlightable } from "@/components";
+import {
+  FeedbackCard,
+  Highlightable,
+  FeedbackCategoryChart,
+} from "@/components";
 import { UserContext } from "@/contexts";
 import { useSubmissionReducer } from "@/hooks";
 import {
@@ -6,12 +10,11 @@ import {
   feedbackService,
   submissionService,
 } from "@/services";
-import { colorScheme } from "@/utils";
+import { colorScheme, getColorByCategories } from "@/utils";
 import { PlusIcon } from "@heroicons/react/solid";
-import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Pie } from "react-chartjs-2";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function SubmissionWithFeedback() {
   const { user } = useContext(UserContext);
@@ -23,21 +26,13 @@ function SubmissionWithFeedback() {
   const feedbackListRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    Chart.register(ArcElement, Tooltip, Legend);
     (async function () {
       const result = await submissionService.getOne(+submissionId!);
       dispatch({ type: "SET", payload: result });
       setHighlightedRegions(
         result.feedbacks.map(
           ({ categories, selectedIdx, selectedSourceText }) => ({
-            color:
-              categories.length === 1
-                ? colorScheme(
-                    result.assignment.feedbackCategories.findIndex(
-                      (c) => c.id === categories[0].id
-                    )
-                  )
-                : colorScheme("danger"),
+            color: getColorByCategories(result.assignment, categories),
             selectedSourceText,
             ...selectedIdx,
           })
@@ -45,38 +40,6 @@ function SubmissionWithFeedback() {
       );
     })();
   }, [submissionId, dispatch]);
-
-  const chartData = useMemo(() => {
-    if (!submission) {
-      return { labels: [], datasets: [] };
-    }
-
-    type Result = Record<number, { name: string; cnt: number }>;
-    const acc = submission.feedbacks.reduce<Result>((result, f) => {
-      f.categories.forEach((c) => {
-        if (c.id in result) result[c.id].cnt++;
-        else {
-          result[c.id] = { name: c.name, cnt: 1 };
-        }
-      });
-      return result;
-    }, {});
-    return {
-      labels: Object.values(acc).map((c) => c.name),
-      datasets: [
-        {
-          data: Object.values(acc).map((c) => c.cnt),
-          backgroundColor: Object.keys(acc).map((id) =>
-            colorScheme(
-              submission.assignment.feedbackCategories.findIndex(
-                (c) => c.id === +id
-              )
-            )
-          ),
-        },
-      ],
-    };
-  }, [submission]);
 
   function handleSelectFactory(selectedSourceText: boolean) {
     return async ({ start, end }: Region) => {
@@ -87,32 +50,36 @@ function SubmissionWithFeedback() {
           .filter((f) => f.selectedSourceText === selectedSourceText)
           .find(({ selectedIdx: { start: s, end: e } }) => s < end && start < e)
       ) {
-        alert("중복된 영억을 선택할 수 없습니다.");
+        toast.warn("중복된 영억을 선택할 수 없습니다.");
         return;
       }
 
-      const newFeedback = await feedbackService.postOne({
-        selectedIdx: { start, end },
-        selectedSourceText,
-        categoryIds: [],
-        comment: "",
-        professorId: user!.id,
-        submissionId: submission.id,
-        staged: false,
-      });
-      dispatch({ type: "ADD_FEEDBACK", payload: newFeedback });
-      setHighlightedRegions([
-        {
-          color: colorScheme("default"),
-          start,
-          end,
-          selectedSourceText: selectedSourceText,
-        },
-      ]);
-      feedbackListRef.current?.scrollBy({
-        behavior: "smooth",
-        top: feedbackListRef.current.scrollHeight,
-      });
+      try {
+        const newFeedback = await feedbackService.postOne({
+          selectedIdx: { start, end },
+          selectedSourceText,
+          categoryIds: [],
+          comment: "",
+          professorId: user!.id,
+          submissionId: submission.id,
+          staged: false,
+        });
+        dispatch({ type: "ADD_FEEDBACK", payload: newFeedback });
+        setHighlightedRegions([
+          {
+            color: colorScheme("default"),
+            start,
+            end,
+            selectedSourceText: selectedSourceText,
+          },
+        ]);
+        feedbackListRef.current?.scrollBy({
+          behavior: "smooth",
+          top: feedbackListRef.current.scrollHeight,
+        });
+      } catch (error) {
+        if (error instanceof Error) toast.error(error.message);
+      }
     };
   }
 
@@ -124,7 +91,7 @@ function SubmissionWithFeedback() {
     if (!submission) return;
     setHighlightedRegions([
       {
-        color: getColor(categories),
+        color: getColorByCategories(submission.assignment, categories),
         selectedSourceText,
         ...selectedIdx,
       },
@@ -135,7 +102,7 @@ function SubmissionWithFeedback() {
     setHighlightedRegions(
       submission?.feedbacks.map(
         ({ categories, selectedIdx, selectedSourceText }) => ({
-          color: getColor(categories),
+          color: getColorByCategories(submission.assignment, categories),
           selectedSourceText,
           ...selectedIdx,
         })
@@ -143,8 +110,31 @@ function SubmissionWithFeedback() {
     );
   }
 
+  async function handleChangeFeedback(
+    targetId: number,
+    comment: string | null,
+    categoryIds: number[]
+  ) {
+    try {
+      dispatch({
+        type: "PATCH_FEEDBACK",
+        payload: { targetId, comment, categoryIds },
+      });
+      await feedbackService.patchOne(targetId, { comment, categoryIds });
+    } catch (error) {
+      if (error instanceof Error) toast.error(JSON.stringify(error.message));
+    }
+  }
+
   async function handleCreateCategory(name: string) {
-    const newCategory = await feedbackCategoryService.postOne({ name });
+    if (!submission) {
+      toast.error("알 수 없는 오류가 발생했습니다.");
+      throw new Error();
+    }
+    const newCategory = await feedbackCategoryService.postOne({
+      name,
+      assignmentId: submission.assignment.id,
+    });
     dispatch({ type: "ADD_CATEGORY", payload: newCategory });
     return newCategory;
   }
@@ -155,42 +145,9 @@ function SubmissionWithFeedback() {
 
     try {
       await feedbackService.deleteOne(targetId);
-      alert("삭제되었습니다.");
+      toast.success("삭제되었습니다.");
     } catch (error) {
-      alert(`에러가 발생하였습니다. ${error}`);
-    }
-  }
-
-  async function handleSaveFeedback(
-    targetId: number,
-    comment: string | null,
-    categoryIds: number[]
-  ) {
-    dispatch({
-      type: "PATCH_FEEDBACK",
-      payload: { targetId, comment, categoryIds },
-    });
-    try {
-      await feedbackService.patchOne(targetId, { comment, categoryIds });
-      alert("저장되었습니다.");
-    } catch (error) {
-      alert(`에러가 발생하였습니다. ${error}`);
-    }
-  }
-
-  function getColor(categories: FeedbackCategory[]) {
-    if (!submission) return "#000";
-    switch (categories.length) {
-      case 0:
-        return colorScheme("default");
-      case 1:
-        return colorScheme(
-          submission.assignment.feedbackCategories.findIndex(
-            (c) => c.id === categories[0].id
-          )
-        );
-      default:
-        return colorScheme("danger");
+      toast.error(`에러가 발생하였습니다. ${error}`);
     }
   }
 
@@ -268,17 +225,20 @@ function SubmissionWithFeedback() {
                   ? submission.assignment.textFile
                   : submission.textFile
                 ).slice(feedback.selectedIdx.start, feedback.selectedIdx.end)}
-                backgroundColor={getColor(feedback.categories)}
+                backgroundColor={getColorByCategories(
+                  submission.assignment,
+                  feedback.categories
+                )}
                 categories={submission.assignment.feedbackCategories}
                 onMouseEnter={() => handleMouseEnter(feedback)}
                 onMouseLeave={handleMouseLeave}
                 onDelete={handleDelete}
-                onSave={handleSaveFeedback}
                 onCreateCategory={handleCreateCategory}
+                onChangeFeedback={handleChangeFeedback}
               />
             ))}
-            <li className="flex flex-col items-center rounded-md border-2 border-dashed border-primary p-4">
-              <PlusIcon className="h-16 w-16 fill-primary" />
+            <li className="border-primary flex flex-col items-center rounded-md border-2 border-dashed p-4">
+              <PlusIcon className="fill-primary h-16 w-16" />
               <span className="text-sm">
                 추가하려면 번역문 창에서 텍스트를 선택하세요
               </span>
@@ -297,18 +257,18 @@ function SubmissionWithFeedback() {
             value={submission.generalReview || ""}
           ></textarea>
         </section>
-        <section className="grid place-content-center">
-          <Pie
-            data={chartData}
-            options={{
-              font: {
-                family: "'Noto Sans KR', 'sans-serif'",
-              },
-              aspectRatio: 2,
-              plugins: { legend: { position: "right" } },
-            }}
-          ></Pie>
-        </section>
+        <FeedbackCategoryChart
+          categories={submission.assignment.feedbackCategories}
+          data={submission.feedbacks.reduce<Record<number, number>>(
+            (result, f) => {
+              f.categories.forEach((c) => {
+                result[c.id] = c.id in result ? result[c.id] + 1 : 1;
+              });
+              return result;
+            },
+            {}
+          )}
+        />
       </section>
     </main>
   ) : (

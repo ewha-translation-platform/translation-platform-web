@@ -1,4 +1,2 @@
-import colorScheme from "./colorScheme";
-import { yearOptions, semesterOptions } from "./yearSemesterOptions";
-
-export { colorScheme, yearOptions, semesterOptions };
+export { colorScheme, getColorByCategories } from "./colorScheme";
+export { yearOptions, semesterOptions } from "./yearSemesterOptions";

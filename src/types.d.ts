@@ -168,8 +168,11 @@ interface FeedbackCategory {
 }
 interface CreateFeedbackCategoryDto {
   name: string;
+  assignmentId: number;
 }
-type UpdateFeedbackCategoryDto = Partial<CreateFeedbackCategoryDto>;
+interface UpdateFeedbackCategoryDto {
+  name: string;
+}
 
 interface Feedback {
   id: number;
