@@ -19,7 +19,7 @@ import {
 function ProtectedWrapper() {
   const { user } = useContext(UserContext);
   return user ? (
-    <div className="bg-neutral-100 h-screen grid sm:grid-cols-[var(--sidebar-width)_1fr] grid-rows-[auto_auto_minmax(0,100%)] sm:grid-rows-[auto_minmax(0,100%)]">
+    <div className="grid h-screen grid-rows-[auto_auto_minmax(0,100%)] bg-neutral-100 sm:grid-cols-[var(--sidebar-width)_1fr] sm:grid-rows-[auto_minmax(0,100%)]">
       <Header />
       <Sidebar />
       <Outlet />

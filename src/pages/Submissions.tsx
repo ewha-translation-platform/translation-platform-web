@@ -30,7 +30,7 @@ function Submissions() {
   }
 
   return (
-    <main className="p-4 space-y-4">
+    <main className="space-y-4 p-4">
       <section className="flex justify-between">
         <h2>제출 목록</h2>
       </section>

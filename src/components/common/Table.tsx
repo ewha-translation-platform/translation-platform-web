@@ -42,12 +42,12 @@ function Table<T extends Record<string, any>>({
   }
 
   return (
-    <table className="bg-white shadow-md text-center border-collapse select-none">
+    <table className="border-collapse select-none bg-white text-center shadow-md">
       <thead>
         <tr>
           {labels.map((label, idx) => (
             <th
-              className="relative p-2 px-8 cursor-pointer border"
+              className="relative cursor-pointer border p-2 px-8"
               key={idx}
               onClick={() => {
                 const key = columns[idx];
@@ -64,13 +64,13 @@ function Table<T extends Record<string, any>>({
               {label}
               {sortConfig.isAscending ? (
                 <ArrowUpIcon
-                  className={`absolute top-1/2 -translate-y-1/2 right-0 h-6 w-6 p-1 rounded-full ${
+                  className={`absolute top-1/2 right-0 h-6 w-6 -translate-y-1/2 rounded-full p-1 ${
                     sortConfig.key !== columns[idx] ? "hidden" : ""
                   }`}
                 />
               ) : (
                 <ArrowDownIcon
-                  className={`absolute top-1/2 -translate-y-1/2 right-0 h-6 w-6 p-1 rounded-full ${
+                  className={`absolute top-1/2 right-0 h-6 w-6 -translate-y-1/2 rounded-full p-1 ${
                     sortConfig.key !== columns[idx] ? "hidden" : ""
                   }`}
                 />

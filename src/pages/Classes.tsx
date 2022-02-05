@@ -48,9 +48,9 @@ function Classes() {
   }
 
   return (
-    <main className="p-4 space-y-4">
+    <main className="space-y-4 p-4">
       <h2>강의 목록</h2>
-      <form className="max-w-xl grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <form className="grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
         <Select
           label="연도"
           options={yearOptions}
@@ -67,7 +67,7 @@ function Classes() {
           {...register("query")}
         />
       </form>
-      <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
+      <ul className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
         {classes &&
           searchedClasses.map((item) => (
             <ClassCard

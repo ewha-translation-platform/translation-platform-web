@@ -5,7 +5,7 @@ function StyledNavLink(props: { to: string; label: string }) {
     <NavLink
       to={props.to}
       className={({ isActive }) =>
-        `text-lg hover:bg-white hover:bg-opacity-20 px-4 py-2 ${
+        `px-4 py-2 text-lg hover:bg-white hover:bg-opacity-20 ${
           isActive ? "bg-white bg-opacity-20" : ""
         }`
       }

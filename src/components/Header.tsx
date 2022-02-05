@@ -13,7 +13,7 @@ function Header() {
 
   return (
     <header
-      className={`col-span-full p-2 flex gap-2 items-center bg-primary text-white`}
+      className={`col-span-full flex items-center gap-2 bg-primary p-2 text-white`}
     >
       <Link to="/" className="mr-auto">
         <h1 className="font-normal">Translation Platform</h1>

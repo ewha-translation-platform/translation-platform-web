@@ -11,12 +11,12 @@ function CourseModal({ visible, onSubmit, onCancel }: CourseModalProps) {
     useForm<{ code: string; name: string }>();
   return (
     <section
-      className={`z-20 absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 ${
+      className={`absolute top-0 left-0 z-20 h-full w-full bg-black bg-opacity-50 ${
         visible ? "grid" : "hidden"
       } place-content-center`}
     >
       <form
-        className="w-md bg-white p-4 rounded-md shadow-xl grid grid-cols-2 gap-2"
+        className="w-md grid grid-cols-2 gap-2 rounded-md bg-white p-4 shadow-xl"
         onSubmit={handleSubmit(({ code, name }) => {
           onSubmit(code, name);
           reset();

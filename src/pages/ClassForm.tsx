@@ -100,7 +100,7 @@ function ClassForm() {
   );
 
   return (
-    <main className="p-4 max-w-5xl grid sm:grid-rows-[auto_minmax(0,100%)] sm:grid-cols-[1fr_2fr] gap-4">
+    <main className="grid max-w-5xl gap-4 p-4 sm:grid-cols-[1fr_2fr] sm:grid-rows-[auto_minmax(0,100%)]">
       <nav className="col-span-full flex gap-2">
         <h2 className="mr-auto">
           {classId === "new" ? "새 강의 분반 추가" : "강의 분반 편집"}
@@ -119,7 +119,7 @@ function ClassForm() {
           저장
         </button>
       </nav>
-      <section className="grid gap-2 sm:grid-cols-2 auto-rows-min">
+      <section className="grid auto-rows-min gap-2 sm:grid-cols-2">
         <Select
           label="연도"
           disabled={classId !== "new"}
@@ -184,7 +184,7 @@ function ClassForm() {
           }))}
         />
         <button
-          className="py-2 px-4 bg-primary text-white rounded-md border border-primary hover:opacity-70 disabled:hover:opacity-30 self-end"
+          className="self-end rounded-md border border-primary bg-primary py-2 px-4 text-white hover:opacity-70 disabled:hover:opacity-30"
           disabled={!department}
           onClick={() => setCourseModalVisible(true)}
         >
@@ -221,7 +221,7 @@ function ClassForm() {
       </section>
       <section className="flex flex-col gap-2">
         <label>수강생 명단</label>
-        <div className="min-h-[16rem] bg-white rounded-md shadow-lg overflow-auto hidden-scrollbar">
+        <div className="hidden-scrollbar min-h-[16rem] overflow-auto rounded-md bg-white shadow-lg">
           {students.length !== 0 ? (
             <Table
               labels={["단과대학", "학과", "이름", "비고"]}
@@ -229,7 +229,7 @@ function ClassForm() {
               data={students}
             />
           ) : (
-            <p className="text-center mt-16">등록된 수강생이 없습니다.</p>
+            <p className="mt-16 text-center">등록된 수강생이 없습니다.</p>
           )}
         </div>
         <input type="file" accept=".csv,.xlsx" onChange={handleFileInput} />

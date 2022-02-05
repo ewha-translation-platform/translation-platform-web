@@ -5,9 +5,9 @@ function NewItemCard() {
   return (
     <Link
       to="new"
-      className="w-full h-20 sm:w-40 sm:h-40 bg-primary hover:bg-opacity-80 rounded-lg flex justify-center items-center"
+      className="flex h-20 w-full items-center justify-center rounded-lg bg-primary hover:bg-opacity-80 sm:h-40 sm:w-40"
     >
-      <PlusIcon className="text-white w-12 h-12" />
+      <PlusIcon className="h-12 w-12 text-white" />
     </Link>
   );
 }

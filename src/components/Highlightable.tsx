@@ -63,16 +63,16 @@ function Highlightable({
 
   return (
     <div className={`relative ${className}`} {...props}>
-      <div className="absolute h-full w-full bg-white text-transparent border rounded-md">
+      <div className="absolute h-full w-full rounded-md border bg-white text-transparent">
         <div
-          className="h-full w-full p-2 break-words whitespace-pre-wrap pointer-events-none overflow-auto"
+          className="pointer-events-none h-full w-full overflow-auto whitespace-pre-wrap break-words p-2"
           ref={highlightDivRef}
         >
           {highlightedText}
         </div>
       </div>
       <textarea
-        className="absolute h-full w-full bg-transparent resize-none"
+        className="absolute h-full w-full resize-none bg-transparent"
         onScroll={syncScroll}
         onSelect={(e) => {
           const selectedIdx: Region = {

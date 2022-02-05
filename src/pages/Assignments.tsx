@@ -23,11 +23,11 @@ function Assignments() {
   }
 
   return (
-    <main className="p-4 space-y-4 overflow-auto">
+    <main className="space-y-4 overflow-auto p-4">
       <h2>과제 목록</h2>
-      <section className="p-4 space-y-4 bg-secondary-300 rounded-md shadow-inner">
+      <section className="space-y-4 rounded-md bg-secondary-300 p-4 shadow-inner">
         <h3>현재 주차</h3>
-        <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
+        <ul className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
           {assignmentsByWeekNumber[currentWeek].length === 0
             ? "과제가 없습니다."
             : assignmentsByWeekNumber[currentWeek].map((item) => (
@@ -44,7 +44,7 @@ function Assignments() {
       {assignmentsByWeekNumber.map((assignments, idx) => (
         <section key={idx} className="space-y-4">
           <h3>{idx + 1}주차</h3>
-          <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
+          <ul className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
             {assignments.length === 0
               ? "과제가 없습니다."
               : assignments.map((item) => (

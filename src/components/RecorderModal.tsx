@@ -56,10 +56,10 @@ function RecorderModal({ onSave: handleSave }: RecorderModalProps) {
 
   return (
     <div
-      className={`z-20 absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 grid place-content-center`}
+      className={`absolute top-0 left-0 z-20 grid h-full w-full place-content-center bg-black bg-opacity-50`}
     >
       <section
-        className={`w-96 bg-white rounded-md shadow-xl p-4 border-4 ${
+        className={`w-96 rounded-md border-4 bg-white p-4 shadow-xl ${
           mediaRecorder?.state === "recording" ? "border-red-500" : ""
         }`}
       >

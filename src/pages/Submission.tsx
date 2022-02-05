@@ -62,7 +62,7 @@ function Submission() {
 
   if (!assignment) return <span>Loading...</span>;
   return (
-    <main className="p-4 max-w-5xl grid grid-rows-[min-content_1fr_min-content] gap-2">
+    <main className="grid max-w-5xl grid-rows-[min-content_1fr_min-content] gap-2 p-4">
       <h2 className="col-span-full">과제 제출</h2>
       {assignment.assignmentType === "TRANSLATION" ? (
         <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">

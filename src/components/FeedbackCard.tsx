@@ -42,13 +42,13 @@ function FeedbackCard({
 
   return (
     <li
-      className={`relative flex flex-col gap-2 rounded-md shadow-md p-4 hover:cursor-pointer hover:shadow-none transition-shadow overflow-hidden`}
+      className={`relative flex flex-col gap-2 overflow-hidden rounded-md p-4 shadow-md transition-shadow hover:cursor-pointer hover:shadow-none`}
       style={{ backgroundColor }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <button
-        className="absolute top-0 right-0 h-8 w-8 p-1 rounded-bl-lg bg-danger text-white hover:bg-red-500"
+        className="absolute top-0 right-0 h-8 w-8 rounded-bl-lg bg-danger p-1 text-white hover:bg-red-500"
         onClick={(e) => {
           e.stopPropagation();
           handleDelete(feedback.id);

@@ -94,13 +94,13 @@ function AssignmentForm() {
   );
 
   return (
-    <main className="p-4 grid grid-rows-[auto_minmax(0,100%)] overflow-auto">
+    <main className="grid grid-rows-[auto_minmax(0,100%)] overflow-auto p-4">
       <h2>{assignmentId === "new" ? "과제 추가" : "과제 수정"}</h2>
       <form
-        className="grid max-w-5xl sm:grid-cols-2 grid-rows-[1fr_auto] gap-4"
+        className="grid max-w-5xl grid-rows-[1fr_auto] gap-4 sm:grid-cols-2"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <section className="grid grid-cols-4 gap-2 auto-rows-min">
+        <section className="grid auto-rows-min grid-cols-4 gap-2">
           <Select
             label="주차"
             className="col-span-2"
@@ -165,13 +165,13 @@ function AssignmentForm() {
           >
             뒤로가기
           </button>
-          <button className="btn bg-primary text-white ml-auto" disabled>
+          <button className="btn ml-auto bg-primary text-white" disabled>
             미리보기
           </button>
           <input
             type="submit"
             value="확인"
-            className="btn bg-primary text-white justify-self-end"
+            className="btn justify-self-end bg-primary text-white"
           />
         </section>
       </form>
@@ -244,7 +244,7 @@ function AssignmentForm() {
           {waveSurfer?.isReady && (
             <section className="flex gap-2">
               <button
-                className="btn bg-primary text-white mr-auto"
+                className="btn mr-auto bg-primary text-white"
                 onClick={(e) => {
                   e.preventDefault();
                   waveSurfer.playPause();

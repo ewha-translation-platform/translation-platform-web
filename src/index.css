@@ -31,19 +31,19 @@
   textarea,
   input,
   input[type] {
-    @apply p-2 rounded-md border border-primary focus:border-primary focus:ring-primary;
+    @apply rounded-md border border-primary p-2 focus:border-primary focus:ring-primary;
   }
 }
 
 @layer components {
   .btn {
-    @apply py-2 px-4 rounded-md font-semibold text-lg cursor-pointer transition-all;
+    @apply cursor-pointer rounded-md py-2 px-4 text-lg font-semibold transition-all;
   }
   .btn-sm {
-    @apply p-1 px-2 rounded-sm cursor-pointer transition-all;
+    @apply cursor-pointer rounded-sm p-1 px-2 transition-all;
   }
   .btn-icon {
-    @apply h-8 w-8 p-1 rounded-full cursor-pointer transition-all;
+    @apply h-8 w-8 cursor-pointer rounded-full p-1 transition-all;
   }
 }
 
@@ -56,6 +56,6 @@
     display: none;
   }
   :disabled {
-    @apply opacity-30 cursor-default;
+    @apply cursor-default opacity-30;
   }
 }

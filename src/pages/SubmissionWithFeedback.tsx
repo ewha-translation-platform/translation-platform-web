@@ -195,7 +195,7 @@ function SubmissionWithFeedback() {
   }
 
   return submission ? (
-    <main className="p-4 grid grid-rows-[auto_minmax(0,100%)] gap-2">
+    <main className="grid grid-rows-[auto_minmax(0,100%)] gap-2 p-4">
       <nav className="flex flex-wrap items-start gap-2">
         <h2 className="mr-auto">
           {submission.student.lastName}
@@ -254,10 +254,10 @@ function SubmissionWithFeedback() {
             />
           </article>
         </section>
-        <section className="flex flex-col min-h-0">
+        <section className="flex min-h-0 flex-col">
           <h3>피드백</h3>
           <ul
-            className="overflow-auto flex flex-col gap-2 hidden-scrollbar"
+            className="hidden-scrollbar flex flex-col gap-2 overflow-auto"
             ref={feedbackListRef}
           >
             {submission.feedbacks.map((feedback) => (
@@ -277,8 +277,8 @@ function SubmissionWithFeedback() {
                 onCreateCategory={handleCreateCategory}
               />
             ))}
-            <li className="p-4 border-2 rounded-md border-dashed border-primary flex flex-col items-center">
-              <PlusIcon className="w-16 h-16 fill-primary" />
+            <li className="flex flex-col items-center rounded-md border-2 border-dashed border-primary p-4">
+              <PlusIcon className="h-16 w-16 fill-primary" />
               <span className="text-sm">
                 추가하려면 번역문 창에서 텍스트를 선택하세요
               </span>

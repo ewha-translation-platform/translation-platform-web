@@ -10,7 +10,7 @@ interface CardProps extends HTMLAttributes<HTMLLIElement> {
 function Card({ title, subtitle, description, actions, ...props }: CardProps) {
   return (
     <li
-      className="w-full sm:w-40 sm:h-40 p-4 bg-white rounded-xl shadow-lg cursor-pointer hover:scale-105 hover:shadow-xl transition-transform select-none flex flex-col gap-2"
+      className="flex w-full cursor-pointer select-none flex-col gap-2 rounded-xl bg-white p-4 shadow-lg transition-transform hover:scale-105 hover:shadow-xl sm:h-40 sm:w-40"
       tabIndex={0}
       {...props}
     >
@@ -20,7 +20,7 @@ function Card({ title, subtitle, description, actions, ...props }: CardProps) {
       </section>
       {description && <p>{description}</p>}
       {actions && (
-        <section className="flex-grow flex justify-end items-end gap-1">
+        <section className="flex flex-grow items-end justify-end gap-1">
           {actions}
         </section>
       )}

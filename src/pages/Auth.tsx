@@ -31,8 +31,8 @@ function Auth() {
   }
 
   return (
-    <div className="h-screen grid place-content-center">
-      <main className="max-w-sm p-8 pt-8 bg-gray-100 rounded-b-lg shadow-md border-t-4 border-primary flex flex-col gap-8">
+    <div className="grid h-screen place-content-center">
+      <main className="flex max-w-sm flex-col gap-8 rounded-b-lg border-t-4 border-primary bg-gray-100 p-8 pt-8 shadow-md">
         <h2 className="text-center font-semibold">로그인 - Dev</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2">
           <InputField
@@ -72,7 +72,7 @@ function Auth() {
               회원가입
             </button>
           </section> */}
-          <button className="text-blue-500 underline font-semibold" disabled>
+          <button className="font-semibold text-blue-500 underline" disabled>
             비밀번호를 잊으셨나요?
           </button>
         </form>
