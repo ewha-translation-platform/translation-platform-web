@@ -3,6 +3,7 @@ import { CreatableSelect, TextArea } from "./common";
 import { XIcon } from "@heroicons/react/outline";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import chroma from "chroma-js";
 
 interface FeedbackCardProps {
   feedback: Feedback;
@@ -46,7 +47,7 @@ function FeedbackCard({
       feedback.categories.map(({ id }) => id)
     );
     reset({ comment });
-    toast.success("코멘트가 적용되었습니다.");
+    toast.success("코멘트가 저장되었습니다.");
   };
 
   const categoryOptions = categories.map((c) => ({
@@ -56,60 +57,73 @@ function FeedbackCard({
 
   return (
     <li
-      className={`relative flex max-w-full flex-col gap-2 p-3 shadow-md transition-shadow hover:shadow-none`}
-      style={{ backgroundColor }}
+      className={`max-w-full border bg-white shadow-md transition-shadow hover:shadow-none`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <button
-        className="bg-danger absolute top-0 right-0 h-6 w-6 rounded-bl-md p-1 text-white hover:bg-red-500"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDelete(feedback.id);
-        }}
-      >
-        <XIcon />
-      </button>
-      <p className="mt-3">{selectedText}</p>
-      <CreatableSelect<Option<number>, true>
-        value={categoryOptions.filter((c) =>
-          feedback.categories.map(({ id }) => id).includes(c.value)
-        )}
-        onChange={async (newValue) => {
-          await handleChangeFeedback(
-            feedback.id,
-            feedback.comment,
-            newValue.map((v) => v.value)
-          );
-        }}
-        onCreateOption={async (value) => {
-          const { id: newId } = await handleCreateCategory(value);
-          await handleChangeFeedback(feedback.id, feedback.comment, [
-            ...feedback.categories.map(({ id }) => id),
-            newId,
-          ]);
-        }}
-        options={categoryOptions}
-        placeholder="카테고리를 선택하세요"
-        isMulti
-        isSearchable
-      />
-      <form className="flex flex-col" onSubmit={handleSubmit(onSubmit)}>
-        <TextArea
-          label=""
-          placeholder="코멘트를 입력하세요"
-          innerClassName="resize-none"
-          rows={3}
-          {...register("comment")}
-        ></TextArea>
+      <section style={{ backgroundColor }} className="flex justify-end">
         <button
-          type="submit"
-          className={`btn bg-primary text-white ${isDirty ? "" : "hidden"}`}
-          disabled={isSubmitting}
+          className="bg-danger h-6 w-6 rounded-bl-md p-1 text-white hover:bg-red-500"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete(feedback.id);
+          }}
         >
-          적용
+          <XIcon />
         </button>
-      </form>
+      </section>
+      <section
+        className="flex flex-col gap-2 p-3"
+        style={{ backgroundColor: chroma(backgroundColor).alpha(0.3).hex() }}
+      >
+        <p>{selectedText}</p>
+        <CreatableSelect<Option<number>, true>
+          value={categoryOptions.filter((c) =>
+            feedback.categories.map(({ id }) => id).includes(c.value)
+          )}
+          onChange={async (newValue) => {
+            await handleChangeFeedback(
+              feedback.id,
+              feedback.comment,
+              newValue.map((v) => v.value)
+            );
+          }}
+          onCreateOption={async (value) => {
+            const { id: newId } = await handleCreateCategory(value);
+            await handleChangeFeedback(feedback.id, feedback.comment, [
+              ...feedback.categories.map(({ id }) => id),
+              newId,
+            ]);
+          }}
+          options={categoryOptions}
+          placeholder="카테고리를 선택하세요"
+          isMulti
+          isSearchable
+        />
+        <form className="flex flex-col gap-1" onSubmit={handleSubmit(onSubmit)}>
+          <TextArea
+            label=""
+            placeholder="코멘트를 입력하세요"
+            innerClassName="resize-none"
+            rows={3}
+            {...register("comment")}
+          ></TextArea>
+          {isDirty && (
+            <div className="flex items-center justify-between">
+              <span className="text-red-700">
+                코멘트가 저장되지 않았습니다.
+              </span>
+              <button
+                type="submit"
+                className="btn-sm bg-primary rounded-md text-white"
+                disabled={isSubmitting}
+              >
+                저장
+              </button>
+            </div>
+          )}
+        </form>
+      </section>
     </li>
   );
 }

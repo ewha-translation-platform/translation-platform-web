@@ -10,40 +10,67 @@ import {
   feedbackService,
   submissionService,
 } from "@/services";
-import { colorScheme, getColorByCategories } from "@/utils";
+import { colorScheme } from "@/utils";
 import { PlusIcon } from "@heroicons/react/solid";
-import { useContext, useEffect, useRef, useState } from "react";
+import {
+  Dispatch,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import Loading from "./Loading";
 
-function SubmissionWithFeedback() {
+interface SubmissionWithFeedbackProps {
+  submission: Submission;
+  dispatch: Dispatch<any>;
+}
+
+function SubmissionWithFeedback({
+  submission,
+  dispatch,
+}: SubmissionWithFeedbackProps) {
   const { user } = useContext(UserContext);
-  const { submissionId } = useParams<{ submissionId: string }>();
-  const [submission, dispatch] = useSubmissionReducer();
-  const [highlightedRegions, setHighlightedRegions] = useState<
-    { color: string; start: number; end: number; selectedSourceText: boolean }[]
-  >([]);
   const feedbackListRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    (async function () {
-      const result = await submissionService.getOne(+submissionId!);
-      dispatch({ type: "SET", payload: result });
-      setHighlightedRegions(
-        result.feedbacks.map(
-          ({ categories, selectedIdx, selectedSourceText }) => ({
-            color: getColorByCategories(result.assignment, categories),
-            selectedSourceText,
-            ...selectedIdx,
-          })
-        )
-      );
-    })();
-  }, [submissionId, dispatch]);
+  const getColorByCategories = useCallback(
+    (categories: FeedbackCategory[]) => {
+      switch (categories.length) {
+        case 0:
+          return colorScheme("default");
+        case 1:
+          return colorScheme(
+            submission.assignment.feedbackCategories.findIndex(
+              (c) => c.id === categories[0].id
+            )
+          );
+        default:
+          return colorScheme("danger");
+      }
+    },
+    [submission]
+  );
+
+  const feedbackToHighlight = useCallback(
+    ({ categories, selectedIdx, selectedSourceText }: Feedback) => {
+      return {
+        color: getColorByCategories(categories),
+        selectedSourceText,
+        ...selectedIdx,
+      };
+    },
+    [getColorByCategories]
+  );
+
+  const [highlightedRegions, setHighlightedRegions] = useState<
+    { color: string; start: number; end: number; selectedSourceText: boolean }[]
+  >(submission.feedbacks.map(feedbackToHighlight));
 
   function handleSelectFactory(selectedSourceText: boolean) {
     return async ({ start, end }: Region) => {
-      if (!submission) return;
       if (start === end) return;
       if (
         submission.feedbacks
@@ -83,75 +110,59 @@ function SubmissionWithFeedback() {
     };
   }
 
-  function handleMouseEnter({
-    categories,
-    selectedIdx,
-    selectedSourceText,
-  }: Feedback) {
-    if (!submission) return;
-    setHighlightedRegions([
-      {
-        color: getColorByCategories(submission.assignment, categories),
-        selectedSourceText,
-        ...selectedIdx,
-      },
-    ]);
+  function handleMouseEnter(feedback: Feedback) {
+    setHighlightedRegions([feedbackToHighlight(feedback)]);
   }
 
   function handleMouseLeave() {
-    setHighlightedRegions(
-      submission?.feedbacks.map(
-        ({ categories, selectedIdx, selectedSourceText }) => ({
-          color: getColorByCategories(submission.assignment, categories),
-          selectedSourceText,
-          ...selectedIdx,
-        })
-      ) ?? []
-    );
+    setHighlightedRegions(submission.feedbacks.map(feedbackToHighlight));
   }
 
-  async function handleChangeFeedback(
+  async function handlePatchFeedback(
     targetId: number,
     comment: string | null,
     categoryIds: number[]
   ) {
     try {
+      await feedbackService.patchOne(targetId, { comment, categoryIds });
       dispatch({
         type: "PATCH_FEEDBACK",
         payload: { targetId, comment, categoryIds },
       });
-      await feedbackService.patchOne(targetId, { comment, categoryIds });
+      toast.success("피드백이 업데이트되었습니다.");
     } catch (error) {
-      if (error instanceof Error) toast.error(JSON.stringify(error.message));
+      if (error instanceof Error) toast.error(error.message);
+    }
+  }
+
+  async function handleDeleteFeedback(targetId: number) {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+
+    try {
+      await feedbackService.deleteOne(targetId);
+      dispatch({ type: "DELETE_FEEDBACK", payload: targetId });
+      toast.success("삭제되었습니다.");
+    } catch (error) {
+      if (error instanceof Error) toast.error(error.message);
     }
   }
 
   async function handleCreateCategory(name: string) {
-    if (!submission) {
-      toast.error("알 수 없는 오류가 발생했습니다.");
-      throw new Error();
-    }
-    const newCategory = await feedbackCategoryService.postOne({
-      name,
-      assignmentId: submission.assignment.id,
-    });
-    dispatch({ type: "ADD_CATEGORY", payload: newCategory });
-    return newCategory;
-  }
-
-  async function handleDelete(targetId: number) {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    dispatch({ type: "DELETE_FEEDBACK", payload: targetId });
-
     try {
-      await feedbackService.deleteOne(targetId);
-      toast.success("삭제되었습니다.");
+      const newCategory = await feedbackCategoryService.postOne({
+        name,
+        assignmentId: submission.assignment.id,
+      });
+      dispatch({ type: "ADD_CATEGORY", payload: newCategory });
+      toast.success(`"${name}" 카테고리가 추가되었습니다.`);
+      return newCategory;
     } catch (error) {
-      toast.error(`에러가 발생하였습니다. ${error}`);
+      if (error instanceof Error) toast.error(error.message);
+      throw error;
     }
   }
 
-  return submission ? (
+  return (
     <main className="grid grid-rows-[auto_minmax(0,100%)] gap-2 p-4">
       <nav className="flex flex-wrap items-start gap-2">
         <h2 className="mr-auto">
@@ -180,7 +191,7 @@ function SubmissionWithFeedback() {
           저장
         </button>
       </nav>
-      <section className="grid grid-cols-[1fr_20rem] gap-2">
+      <section className="grid grid-cols-[1fr_20rem] grid-rows-[1fr_min-content] gap-2">
         <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <article className="flex flex-col">
             <h3>원문</h3>
@@ -225,16 +236,13 @@ function SubmissionWithFeedback() {
                   ? submission.assignment.textFile
                   : submission.textFile
                 ).slice(feedback.selectedIdx.start, feedback.selectedIdx.end)}
-                backgroundColor={getColorByCategories(
-                  submission.assignment,
-                  feedback.categories
-                )}
+                backgroundColor={getColorByCategories(feedback.categories)}
                 categories={submission.assignment.feedbackCategories}
                 onMouseEnter={() => handleMouseEnter(feedback)}
                 onMouseLeave={handleMouseLeave}
-                onDelete={handleDelete}
+                onDelete={handleDeleteFeedback}
                 onCreateCategory={handleCreateCategory}
-                onChangeFeedback={handleChangeFeedback}
+                onChangeFeedback={handlePatchFeedback}
               />
             ))}
             <li className="border-primary flex flex-col items-center rounded-md border-2 border-dashed p-4">
@@ -271,9 +279,22 @@ function SubmissionWithFeedback() {
         />
       </section>
     </main>
-  ) : (
-    <span>Loading...</span>
   );
 }
 
-export default SubmissionWithFeedback;
+export default function AJAXWrapper() {
+  const { submissionId } = useParams<{ submissionId: string }>();
+  const [submission, dispatch] = useSubmissionReducer();
+
+  useEffect(() => {
+    submissionService.getOne(+submissionId!).then((res) => {
+      dispatch({ type: "SET", payload: res });
+    });
+  }, [submissionId, dispatch]);
+
+  return submission ? (
+    <SubmissionWithFeedback submission={submission} dispatch={dispatch} />
+  ) : (
+    <Loading />
+  );
+}

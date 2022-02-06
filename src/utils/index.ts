@@ -1,2 +1,2 @@
-export { colorScheme, getColorByCategories } from "./colorScheme";
+export { colorScheme } from "./colorScheme";
 export { yearOptions, semesterOptions } from "./yearSemesterOptions";

@@ -11,27 +11,35 @@ import {
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import WaveSurfer from "wavesurfer.js";
-import { Checkbox, InputField, Select, TextArea } from "@/components/common";
+import {
+  Checkbox,
+  CreatableSelect,
+  InputField,
+  Select,
+  TextArea,
+} from "@/components/common";
 import { RecorderModal } from "@/components";
 import { assignmentService } from "@/services";
 import { toast } from "react-toastify";
 import { useForceUpdate } from "@/hooks";
 
-const assignmentTypeOptions = [
-  { label: "번역", value: "translate" },
-  { label: "순차 통역", value: "sequential" },
-  { label: "동시 통역", value: "simultaneous" },
+const assignmentTypeOptions: Option<AssignmentType>[] = [
+  { label: "번역", value: "TRANSLATION" },
+  { label: "순차 통역", value: "SEQUENTIAL" },
+  { label: "동시 통역", value: "SIMULTANEOUS" },
 ];
 
 function AssignmentForm() {
-  const { assignmentId } = useParams();
+  const { classId, assignmentId } = useParams();
   const navigate = useNavigate();
   const { register, handleSubmit, watch, setValue, reset } =
     useForm<CreateAssignmentDto>({
       defaultValues: {
+        classId: +classId!,
         assignmentType: "TRANSLATION",
         isPublic: false,
         dueDateTime: new Date().toISOString().slice(0, -8),
+        maxScore: 100,
       },
     });
   const watchAssignmentType = watch("assignmentType", "TRANSLATION");
@@ -46,19 +54,22 @@ function AssignmentForm() {
     }
   }, [assignmentId, reset]);
 
-  const onSubmit: SubmitHandler<CreateAssignmentDto> = ({
+  const onSubmit: SubmitHandler<CreateAssignmentDto> = async ({
     audioFile,
     ...data
   }) => {
-    assignmentService
-      .postOne({
+    try {
+      await assignmentService.postOne({
         ...data,
+        dueDateTime: new Date(Date.parse(data.dueDateTime)).toISOString(),
         audioFile: null,
         weekNumber: +data.weekNumber,
         sequentialRegions: [],
-      })
-      .then(() => toast.success("저장되었습니다."))
-      .catch((e) => toast.error(`오류가 발생했습니다 ${e}`));
+      });
+      toast.success("저장되었습니다.");
+    } catch (error) {
+      toast.error(`오류가 발생했습니다 ${error}`);
+    }
   };
 
   const handleFileInput = useCallback(
@@ -104,7 +115,8 @@ function AssignmentForm() {
           <Select
             label="주차"
             className="col-span-2"
-            {...register("weekNumber", { required: true })}
+            required
+            {...register("weekNumber")}
             options={[...Array(16)].map((_, idx) => ({
               value: (idx + 1).toString(),
               label: `${idx + 1}주차`,
@@ -114,16 +126,19 @@ function AssignmentForm() {
             label="기한"
             className="col-span-2"
             type="datetime-local"
-            {...register("dueDateTime", { required: true })}
+            required
+            {...register("dueDateTime")}
           />
           <InputField
             label="과제명"
             className="col-span-3"
-            {...register("name", { required: true })}
+            required
+            {...register("name")}
           />
           <Select
             label="과제 종류"
-            {...register("assignmentType", { required: true })}
+            required
+            {...register("assignmentType")}
             options={assignmentTypeOptions}
           />
           <TextArea
@@ -131,8 +146,21 @@ function AssignmentForm() {
             className="col-span-4"
             rows={5}
             innerClassName="resize-none"
-            {...register("description", { required: true })}
+            required
+            {...register("description")}
           ></TextArea>
+          <InputField
+            label="최대 점수"
+            type="number"
+            min={0}
+            max={100}
+            required
+            {...register("maxScore")}
+          />
+          <label className="col-span-3 flex flex-col gap-1">
+            피드백 카테고리
+            <CreatableSelect />
+          </label>
           <Checkbox
             label="과제 제출물 공개 여부"
             className="col-span-4"
@@ -165,13 +193,13 @@ function AssignmentForm() {
           >
             뒤로가기
           </button>
-          <button className="btn ml-auto bg-primary text-white" disabled>
+          <button className="btn bg-primary ml-auto text-white" disabled>
             미리보기
           </button>
           <input
             type="submit"
             value="확인"
-            className="btn justify-self-end bg-primary text-white"
+            className="btn bg-primary justify-self-end text-white"
           />
         </section>
       </form>
@@ -244,7 +272,7 @@ function AssignmentForm() {
           {waveSurfer?.isReady && (
             <section className="flex gap-2">
               <button
-                className="btn mr-auto bg-primary text-white"
+                className="btn bg-primary mr-auto text-white"
                 onClick={(e) => {
                   e.preventDefault();
                   waveSurfer.playPause();
