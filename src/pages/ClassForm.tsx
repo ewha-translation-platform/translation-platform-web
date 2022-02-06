@@ -132,48 +132,47 @@ function ClassForm() {
           options={semesterOptions.slice(1)}
           {...filterFormMethods.register("semester")}
         />
-        <label className="col-span-full flex flex-col gap-1">
-          개설학과
-          <CreatableSelect<Option<number>, false>
-            options={departments.map(({ id, name }) => ({
-              value: id,
-              label: name,
-            }))}
-            placeholder=""
-            onCreateOption={async (newDepartmentName) => {
-              if (
-                window.confirm(
-                  `학과 "${newDepartmentName}"을(를) 추가하시겠습니까?`
-                )
-              ) {
-                try {
-                  const department = await departmentService.postOne({
-                    name: newDepartmentName,
-                    collegeName: "통역번역대학원",
-                  });
-                  setDepartments((depts) => [...depts, department]);
-                  filterFormMethods.setValue("department", department);
-                  toast.success("학과를 추가하였습니다.");
-                } catch (e) {
-                  toast.error(JSON.stringify(e));
-                }
-              }
-            }}
-            onChange={(newValue) => {
-              if (!newValue) return;
-              filterFormMethods.setValue(
-                "department",
-                departments.find((d) => d.id === newValue.value)!
-              );
-            }}
-            value={
-              department && {
-                value: department.id,
-                label: department.name,
+        <CreatableSelect<Option<number>, false>
+          label="개설학과"
+          className="col-span-full"
+          options={departments.map(({ id, name }) => ({
+            value: id,
+            label: name,
+          }))}
+          placeholder=""
+          onCreateOption={async (newDepartmentName) => {
+            if (
+              window.confirm(
+                `학과 "${newDepartmentName}"을(를) 추가하시겠습니까?`
+              )
+            ) {
+              try {
+                const department = await departmentService.postOne({
+                  name: newDepartmentName,
+                  collegeName: "통역번역대학원",
+                });
+                setDepartments((depts) => [...depts, department]);
+                filterFormMethods.setValue("department", department);
+                toast.success("학과를 추가하였습니다.");
+              } catch (e) {
+                toast.error(JSON.stringify(e));
               }
             }
-          />
-        </label>
+          }}
+          onChange={(newValue) => {
+            if (!newValue) return;
+            filterFormMethods.setValue(
+              "department",
+              departments.find((d) => d.id === newValue.value)!
+            );
+          }}
+          value={
+            department && {
+              value: department.id,
+              label: department.name,
+            }
+          }
+        />
         <Select
           label="강의"
           disabled={classId !== "new" || filteredCourses.length === 0}
@@ -184,7 +183,7 @@ function ClassForm() {
           }))}
         />
         <button
-          className="self-end rounded-md border border-primary bg-primary py-2 px-4 text-white hover:opacity-70 disabled:hover:opacity-30"
+          className="border-primary bg-primary self-end rounded-md border py-2 px-4 text-white hover:opacity-70 disabled:hover:opacity-30"
           disabled={!department}
           onClick={() => setCourseModalVisible(true)}
         >
@@ -200,24 +199,23 @@ function ClassForm() {
             label: `${idx + 1}분반`,
           }))}
         />
-        <label className="col-span-full flex flex-col gap-1">
-          담당교수
-          <MultiSelect<Option<string>>
-            isSearchable
-            options={professors.map((p) => ({
+        <MultiSelect<Option<string>>
+          label="담당교수"
+          className="col-span-full"
+          isSearchable
+          options={professors.map((p) => ({
+            value: p.id,
+            label: `${p.department} ${p.lastName}${p.firstName}`,
+          }))}
+          value={professors
+            .filter((p) => watchProfessorIds?.includes(p.id))
+            .map((p) => ({
               value: p.id,
               label: `${p.department} ${p.lastName}${p.firstName}`,
             }))}
-            value={professors
-              .filter((p) => watchProfessorIds?.includes(p.id))
-              .map((p) => ({
-                value: p.id,
-                label: `${p.department} ${p.lastName}${p.firstName}`,
-              }))}
-            onChange={(value) => console.log(value)}
-            placeholder="담당교수를 선택하세요"
-          />
-        </label>
+          onChange={(value) => console.log(value)}
+          placeholder="담당교수를 선택하세요"
+        />
       </section>
       <section className="flex flex-col gap-2">
         <label>수강생 명단</label>

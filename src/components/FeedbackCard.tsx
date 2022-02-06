@@ -78,6 +78,7 @@ function FeedbackCard({
       >
         <p>{selectedText}</p>
         <CreatableSelect<Option<number>, true>
+          label=""
           value={categoryOptions.filter((c) =>
             feedback.categories.map(({ id }) => id).includes(c.value)
           )}
