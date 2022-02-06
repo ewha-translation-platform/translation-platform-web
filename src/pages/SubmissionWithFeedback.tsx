@@ -1,7 +1,7 @@
 import {
   FeedbackCard,
-  Highlightable,
   FeedbackCategoryChart,
+  Highlightable,
 } from "@/components";
 import { UserContext } from "@/contexts";
 import { useSubmissionReducer } from "@/hooks";
@@ -20,6 +20,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loading from "./Loading";
@@ -33,8 +34,18 @@ function SubmissionWithFeedback({
   submission,
   dispatch,
 }: SubmissionWithFeedbackProps) {
+  const { assignment, feedbacks } = submission;
   const { user } = useContext(UserContext);
   const feedbackListRef = useRef<HTMLUListElement>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isDirty, isSubmitting },
+  } = useForm<{ generalReview: string }>({
+    defaultValues: { generalReview: submission.generalReview || "" },
+  });
 
   const getColorByCategories = useCallback(
     (categories: FeedbackCategory[]) => {
@@ -43,7 +54,7 @@ function SubmissionWithFeedback({
           return colorScheme("default");
         case 1:
           return colorScheme(
-            submission.assignment.feedbackCategories.findIndex(
+            assignment.feedbackCategories.findIndex(
               (c) => c.id === categories[0].id
             )
           );
@@ -51,7 +62,7 @@ function SubmissionWithFeedback({
           return colorScheme("danger");
       }
     },
-    [submission]
+    [assignment]
   );
 
   const feedbackToHighlight = useCallback(
@@ -67,13 +78,13 @@ function SubmissionWithFeedback({
 
   const [highlightedRegions, setHighlightedRegions] = useState<
     { color: string; start: number; end: number; selectedSourceText: boolean }[]
-  >(submission.feedbacks.map(feedbackToHighlight));
+  >(feedbacks.map(feedbackToHighlight));
 
   function handleSelectFactory(selectedSourceText: boolean) {
     return async ({ start, end }: Region) => {
       if (start === end) return;
       if (
-        submission.feedbacks
+        feedbacks
           .filter((f) => f.selectedSourceText === selectedSourceText)
           .find(({ selectedIdx: { start: s, end: e } }) => s < end && start < e)
       ) {
@@ -115,7 +126,7 @@ function SubmissionWithFeedback({
   }
 
   function handleMouseLeave() {
-    setHighlightedRegions(submission.feedbacks.map(feedbackToHighlight));
+    setHighlightedRegions(feedbacks.map(feedbackToHighlight));
   }
 
   async function handlePatchFeedback(
@@ -151,7 +162,7 @@ function SubmissionWithFeedback({
     try {
       const newCategory = await feedbackCategoryService.postOne({
         name,
-        assignmentId: submission.assignment.id,
+        assignmentId: assignment.id,
       });
       dispatch({ type: "ADD_CATEGORY", payload: newCategory });
       toast.success(`"${name}" 카테고리가 추가되었습니다.`);
@@ -175,32 +186,31 @@ function SubmissionWithFeedback({
         <button className="btn bg-primary text-white" disabled>
           다음 학생
         </button>
-        <button className="btn bg-secondary-500 text-white" disabled>
-          임시 저장
-        </button>
         <button
           className="btn bg-primary text-white hover:opacity-80"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault();
-            submissionService.patchOne(submission.id, {
-              generalReview: submission.generalReview,
-              feedbackIds: submission.feedbacks.map((f) => f.id),
-            });
+            try {
+              await submissionService.stage(submission.id);
+              toast.success("피드백을 학생에게 공개합니다.");
+            } catch (error) {
+              if (error instanceof Error) toast.error(error.message);
+            }
           }}
         >
           저장
         </button>
       </nav>
-      <section className="grid grid-cols-[1fr_20rem] grid-rows-[1fr_min-content] gap-2">
+      <section className="grid grid-cols-[1fr_22rem] grid-rows-[1fr_auto] gap-2">
         <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <article className="flex flex-col">
             <h3>원문</h3>
-            {submission.assignment.assignmentType !== "TRANSLATION" && (
+            {assignment.assignmentType !== "TRANSLATION" && (
               <audio controls className="w-full"></audio>
             )}
             <Highlightable
               className="flex-grow"
-              text={submission.assignment.textFile}
+              text={assignment.textFile}
               highlightedRegions={highlightedRegions.filter(
                 ({ selectedSourceText: selectedOrigin }) => selectedOrigin
               )}
@@ -209,7 +219,7 @@ function SubmissionWithFeedback({
           </article>
           <article className="flex flex-col">
             <h3>번역문</h3>
-            {submission.assignment.assignmentType !== "TRANSLATION" && (
+            {assignment.assignmentType !== "TRANSLATION" && (
               <audio controls className="w-full"></audio>
             )}
             <Highlightable
@@ -228,16 +238,16 @@ function SubmissionWithFeedback({
             className="hidden-scrollbar flex flex-col gap-2 overflow-auto"
             ref={feedbackListRef}
           >
-            {submission.feedbacks.map((feedback) => (
+            {feedbacks.map((feedback) => (
               <FeedbackCard
                 key={feedback.id}
                 feedback={feedback}
                 selectedText={(feedback.selectedSourceText
-                  ? submission.assignment.textFile
+                  ? assignment.textFile
                   : submission.textFile
                 ).slice(feedback.selectedIdx.start, feedback.selectedIdx.end)}
                 backgroundColor={getColorByCategories(feedback.categories)}
-                categories={submission.assignment.feedbackCategories}
+                categories={assignment.feedbackCategories}
                 onMouseEnter={() => handleMouseEnter(feedback)}
                 onMouseLeave={handleMouseLeave}
                 onDelete={handleDeleteFeedback}
@@ -248,34 +258,49 @@ function SubmissionWithFeedback({
             <li className="border-primary flex flex-col items-center rounded-md border-2 border-dashed p-4">
               <PlusIcon className="fill-primary h-16 w-16" />
               <span className="text-sm">
-                추가하려면 번역문 창에서 텍스트를 선택하세요
+                추가하려면 원문/번역문 창에서 텍스트를 선택하세요
               </span>
             </li>
           </ul>
         </section>
-        <section>
+        <form
+          className="flex flex-col gap-1"
+          onSubmit={handleSubmit(async ({ generalReview }) => {
+            dispatch({ type: "SET_GENERAL_REVIEW", payload: generalReview });
+            try {
+              await submissionService.patchOne(submission.id, {
+                generalReview,
+              });
+              toast.success("총평을 저장하였습니다");
+              reset({ generalReview });
+            } catch (error) {
+              if (error instanceof Error) toast.error(error.message);
+            }
+          })}
+        >
           <h3>총평</h3>
           <textarea
             className="w-full resize-none"
             placeholder="총평을 입력하세요."
             rows={6}
-            onChange={(e) =>
-              dispatch({ type: "SET_GENERAL_REVIEW", payload: e.target.value })
-            }
-            value={submission.generalReview || ""}
+            {...register("generalReview")}
           ></textarea>
-        </section>
+          <button
+            type="submit"
+            className="btn bg-primary self-end text-white"
+            disabled={!isDirty || isSubmitting}
+          >
+            {isDirty ? "저장" : "저장됨"}
+          </button>
+        </form>
         <FeedbackCategoryChart
-          categories={submission.assignment.feedbackCategories}
-          data={submission.feedbacks.reduce<Record<number, number>>(
-            (result, f) => {
-              f.categories.forEach((c) => {
-                result[c.id] = c.id in result ? result[c.id] + 1 : 1;
-              });
-              return result;
-            },
-            {}
-          )}
+          categories={assignment.feedbackCategories}
+          data={feedbacks.reduce<Record<number, number>>((result, f) => {
+            f.categories.forEach((c) => {
+              result[c.id] = c.id in result ? result[c.id] + 1 : 1;
+            });
+            return result;
+          }, {})}
         />
       </section>
     </main>

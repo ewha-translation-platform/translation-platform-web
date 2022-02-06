@@ -37,6 +37,10 @@ const submissionService = {
     );
     return submission;
   },
+
+  async stage(id: number) {
+    return Promise.resolve("OK");
+  },
 };
 
 export default submissionService;
