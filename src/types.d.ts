@@ -126,7 +126,7 @@ interface Submission {
   generalReview: string | null;
   graded: boolean;
 
-  audioFile: Blob | null;
+  audioFile: Uint8Array | null;
   playCount: number | null;
   playbackRate: number | null;
 }
@@ -136,7 +136,7 @@ interface CreateSubmissionDto {
   textFile: string;
   staged: boolean;
 
-  audioFile: Blob | null;
+  audioFile: Uint8Arrray | null;
   playCount: number | null;
   playbackRate: number | null;
 }
@@ -148,7 +148,7 @@ type UpdateSubmissionDto = Partial<{
   feedbackIds: number[];
   graded: boolean;
 
-  audioFile: Blob | null;
+  audioFile: Uint8Array | null;
   playCount: number | null;
   playbackRate: number | null;
 }>;

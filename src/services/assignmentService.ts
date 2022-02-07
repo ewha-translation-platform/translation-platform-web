@@ -9,17 +9,32 @@ const assignmentService = {
   },
 
   async getOne(id: number): Promise<Assignment> {
-    const { data: assignment } = await httpService.get<Assignment>(
-      `assignments/${id}`
+    const { data: assignment } = await httpService.get<
+      Omit<Assignment, "audioFile">
+    >(`assignments/${id}`);
+
+    if (assignment.assignmentType === "TRANSLATION")
+      return { ...assignment, audioFile: null };
+
+    const { data: audioFile } = await httpService.get<Blob>(
+      `assignments/${id}/audio`,
+      { responseType: "blob" }
     );
-    return assignment;
+    return { ...assignment, audioFile };
   },
 
-  async postOne(createAssignmentDto: CreateAssignmentDto) {
+  async postOne({ audioFile, ...createAssignmentDto }: CreateAssignmentDto) {
     const { data: assignment } = await httpService.post<Assignment>(
       "assignments",
       createAssignmentDto
     );
+
+    const formData = new FormData();
+    formData.append("audioFile", audioFile || "");
+    await httpService.post(`assignments/${assignment.id}/audio`, formData, {
+      headers: { "content-type": "multipart/form-data" },
+    });
+
     return assignment;
   },
 

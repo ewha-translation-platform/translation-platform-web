@@ -1,16 +1,44 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { TextArea } from "@/components/common";
+import { UserContext } from "@/contexts";
+import { useForceUpdate } from "@/hooks";
+import { assignmentService, submissionService } from "@/services";
+import chroma from "chroma-js";
+import {
+  RefCallback,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { TextArea } from "@/components/common";
-import { assignmentService, submissionService } from "@/services";
 import { toast } from "react-toastify";
-import { UserContext } from "@/contexts";
+import WaveSurfer from "wavesurfer.js";
+import Loading from "./Loading";
 
-function Submission() {
-  const { user } = useContext(UserContext);
+export default function AJAXWrapper() {
   const { assignmentId } = useParams<{ assignmentId: string }>();
-  const audioFile = useRef<Blob | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
+
+  useEffect(() => {
+    (async function () {
+      const assignment = await assignmentService.getOne(+assignmentId!);
+      setAssignment(assignment);
+    })();
+  }, [assignmentId]);
+
+  return assignment ? <Submission assignment={assignment} /> : <Loading />;
+}
+
+interface SubmissionProps {
+  assignment: Assignment;
+}
+function Submission({ assignment }: SubmissionProps) {
+  const { user } = useContext(UserContext);
+  const forceUpdate = useForceUpdate();
+  const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
+  const audioFile = useRef<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -23,6 +51,30 @@ function Submission() {
       staged: false,
     },
   });
+
+  const audioContainerRef: RefCallback<HTMLDivElement> = useCallback(
+    (node) => {
+      if (node) {
+        const waveSurfer = WaveSurfer.create({
+          container: node,
+          waveColor: chroma("#00462A").alpha(0.5).hex(),
+          progressColor: "#00462A",
+        });
+        waveSurfer.load(
+          URL.createObjectURL(assignment.audioFile || new Blob([]))
+        );
+        waveSurfer.on("ready", forceUpdate);
+        setWaveSurfer(waveSurfer);
+      }
+    },
+    [forceUpdate, assignment]
+  );
+
+  useEffect(() => {
+    return () => {
+      waveSurfer?.destroy();
+    };
+  }, [waveSurfer]);
 
   async function temporalSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
     try {
@@ -54,13 +106,6 @@ function Submission() {
     }
   }
 
-  useEffect(() => {
-    assignmentService
-      .getOne(+assignmentId!)
-      .then((data) => setAssignment(data));
-  }, [assignmentId]);
-
-  if (!assignment) return <span>Loading...</span>;
   return (
     <main className="grid max-w-5xl grid-rows-[min-content_1fr_min-content] gap-2 p-4">
       <h2 className="col-span-full">과제 제출</h2>
@@ -84,11 +129,24 @@ function Submission() {
         <>
           <label className="flex flex-col">
             원음
-            <audio src="/simultaneous-example.m4a" controls></audio>
+            <div ref={audioContainerRef}></div>
           </label>
+          {waveSurfer?.isReady && (
+            <section className="flex gap-2">
+              <button
+                className="btn bg-primary mr-auto text-white"
+                onClick={(e) => {
+                  e.preventDefault();
+                  waveSurfer.playPause();
+                }}
+              >
+                재생 / 일시정지
+              </button>
+            </section>
+          )}
           <label className="flex flex-col">
             제출
-            <button className="btn text-white">시작</button>
+            <button className="btn bg-orange-500 text-white">시작</button>
           </label>
         </>
       )}
@@ -111,5 +169,3 @@ function Submission() {
     </main>
   );
 }
-
-export default Submission;
