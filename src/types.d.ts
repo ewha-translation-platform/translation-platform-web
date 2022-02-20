@@ -87,7 +87,6 @@ interface Assignment {
   dueDateTime: string;
   assignmentType: AssignmentType;
   isPublic: boolean;
-  maxScore: number;
   feedbackCategories: FeedbackCategory[];
   textFile: string;
 
@@ -104,7 +103,6 @@ interface CreateAssignmentDto {
   dueDateTime: string;
   assignmentType: AssignmentType;
   isPublic: boolean;
-  maxScore: number;
   feedbackCategoryIds: number[];
   textFile: string;
 
@@ -121,12 +119,11 @@ interface Submission {
   assignment: Assignment;
   textFile: string;
   feedbacks: Feedback[];
-  score: number | null;
   staged: boolean;
   generalReview: string | null;
   graded: boolean;
 
-  audioFile: Uint8Array | null;
+  audioFile: Blob | null;
   playCount: number | null;
   playbackRate: number | null;
 }
@@ -136,7 +133,7 @@ interface CreateSubmissionDto {
   textFile: string;
   staged: boolean;
 
-  audioFile: Uint8Arrray | null;
+  audioFile: Blob | null;
   playCount: number | null;
   playbackRate: number | null;
 }
@@ -144,11 +141,10 @@ type UpdateSubmissionDto = Partial<{
   textFile: string;
   staged: boolean;
   generalReview: string | null;
-  score: boolean | null;
   feedbackIds: number[];
   graded: boolean;
 
-  audioFile: Uint8Array | null;
+  audioFile: Blob | null;
   playCount: number | null;
   playbackRate: number | null;
 }>;

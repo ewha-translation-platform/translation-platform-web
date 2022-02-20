@@ -30,7 +30,6 @@ function AssignmentForm() {
       assignmentType: "TRANSLATION",
       isPublic: false,
       dueDateTime: new Date().toISOString().slice(0, -8),
-      maxScore: 100,
       playbackRate: 1.0,
     },
   });
@@ -123,14 +122,6 @@ function AssignmentForm() {
             required
             {...register("description")}
           ></TextArea>
-          <InputField
-            label="최대 점수"
-            type="number"
-            min={0}
-            max={100}
-            required
-            {...register("maxScore")}
-          />
           {watchAssignmentType !== "TRANSLATION" && (
             <>
               <Select
