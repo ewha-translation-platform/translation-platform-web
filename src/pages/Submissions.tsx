@@ -1,9 +1,8 @@
+import { SelectableTable } from "@/components";
+import { assignmentService } from "@/services";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Table } from "@/components/common";
-import { assignmentService } from "@/services";
 import { toast } from "react-toastify";
-import SelectableTable from "@/components/SelectableTable";
 
 function Submissions() {
   const navigate = useNavigate();

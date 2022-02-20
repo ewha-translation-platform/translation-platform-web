@@ -8,3 +8,5 @@ export { default as NewItemCard } from "./NewItemCard";
 export { default as Sidebar } from "./Sidebar";
 export { default as RecorderModal } from "./RecorderModal";
 export { default as FeedbackCategoryChart } from "./FeedbackCategoryChart";
+export { default as SequentialSubmission } from "./SequentialSubmission";
+export { default as SelectableTable } from "./SelectableTable";
