@@ -47,6 +47,16 @@ const submissionService = {
     return submission;
   },
 
+  async patchMany(ids: number[], updateSubmissionDto: UpdateSubmissionDto) {
+    const {
+      data: { count },
+    } = await httpService.patch<{ count: number }>("submissions/batch", {
+      ids,
+      dto: updateSubmissionDto,
+    });
+    return count;
+  },
+
   async deleteOne(id: number) {
     const { data: submission } = await httpService.delete<Submission>(
       `submissions/${id}`

@@ -1,5 +1,4 @@
-import useSearch from "./useSearch";
-import useSubmissionReducer from "./useSubmissionReducer";
-import useForceUpdate from "./useForceUpdate";
-
-export { useSearch, useSubmissionReducer, useForceUpdate };
+export { default as useForceUpdate } from "./useForceUpdate";
+export { default as useSearch } from "./useSearch";
+export { default as useSubmissionReducer } from "./useSubmissionReducer";
+export type { Action } from "./useSubmissionReducer";

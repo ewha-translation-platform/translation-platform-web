@@ -4,6 +4,7 @@ import {
   Highlightable,
 } from "@/components";
 import { UserContext } from "@/contexts";
+import type { Action } from "@/hooks";
 import { useSubmissionReducer } from "@/hooks";
 import {
   feedbackCategoryService,
@@ -22,12 +23,13 @@ import {
 } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
+import Switch from "react-switch";
 import { toast } from "react-toastify";
 import Loading from "./Loading";
 
 interface SubmissionWithFeedbackProps {
   submission: Submission;
-  dispatch: Dispatch<any>;
+  dispatch: Dispatch<Action>;
 }
 
 function SubmissionWithFeedback({
@@ -176,10 +178,31 @@ function SubmissionWithFeedback({
   return (
     <main className="grid grid-rows-[auto_minmax(0,100%)] gap-2 p-4">
       <nav className="flex flex-wrap items-start gap-2">
-        <h2 className="mr-auto">
+        <h2>
           {submission.student.lastName}
           {submission.student.firstName} 학생의 과제
         </h2>
+        <label className="mr-auto flex items-center gap-2">
+          <Switch
+            checked={submission.graded}
+            onChange={(graded) => {
+              dispatch({ type: "SET_GRADED", payload: graded });
+              submissionService
+                .patchOne(
+                  submission.id,
+                  graded ? { graded } : { graded, openedToStudent: false }
+                )
+                .then(() => {
+                  toast.success("채점 상태를 변경하였습니다.");
+                })
+                .catch((err: Error) => {
+                  toast.error(err.message);
+                  dispatch({ type: "SET_GRADED", payload: !graded });
+                });
+            }}
+          ></Switch>
+          채점 완료로 표시
+        </label>
         <button className="btn bg-primary text-white" disabled>
           이전 학생
         </button>

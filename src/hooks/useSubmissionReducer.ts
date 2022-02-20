@@ -1,6 +1,6 @@
 import { useReducer } from "react";
 
-type Action =
+export type Action =
   | { type: "SET"; payload: Submission }
   | { type: "ADD_FEEDBACK"; payload: Feedback }
   | {
@@ -13,9 +13,13 @@ type Action =
     }
   | { type: "DELETE_FEEDBACK"; payload: number }
   | { type: "ADD_CATEGORY"; payload: FeedbackCategory }
-  | { type: "SET_GENERAL_REVIEW"; payload: string };
+  | { type: "SET_GENERAL_REVIEW"; payload: string }
+  | { type: "SET_GRADED"; payload: boolean };
 
-function reducer(submission: Submission | null, action: Action) {
+function reducer(
+  submission: Submission | null,
+  action: Action
+): Submission | null {
   if (action.type === "SET") return action.payload;
   if (!submission) return null;
   switch (action.type) {
@@ -57,6 +61,8 @@ function reducer(submission: Submission | null, action: Action) {
       };
     case "SET_GENERAL_REVIEW":
       return { ...submission, generalReview: action.payload };
+    case "SET_GRADED":
+      return { ...submission, graded: action.payload };
     default:
       return submission;
   }

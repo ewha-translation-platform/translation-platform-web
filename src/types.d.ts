@@ -122,6 +122,7 @@ interface Submission {
   staged: boolean;
   generalReview: string | null;
   graded: boolean;
+  openedToStudent: boolean;
 
   audioFile: Blob | null;
   playCount: number | null;
@@ -143,6 +144,7 @@ type UpdateSubmissionDto = Partial<{
   generalReview: string | null;
   feedbackIds: number[];
   graded: boolean;
+  openedToStudent: boolean;
 
   audioFile: Blob | null;
   playCount: number | null;
@@ -154,6 +156,7 @@ interface SubmissionStatus {
   firstName: string;
   lastName: string;
   graded: boolean;
+  openedToStudent: boolean;
   submissionDateTime: string | null;
   playCount: number | null;
 }
