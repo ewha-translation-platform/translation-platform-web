@@ -32,6 +32,7 @@ function SelectableTable<T extends Record<string, any>>({
         ...columns,
       ]}
       onClick={handleClick}
+      initialSortKeyIndex={1}
     />
   );
 }

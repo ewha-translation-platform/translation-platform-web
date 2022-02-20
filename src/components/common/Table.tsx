@@ -9,6 +9,7 @@ export interface TableProps<T extends Record<string, any>> {
   columns: (keyof T | ElementRenderer<T> | StringRenderer<T>)[];
   data: T[];
   onClick?: (d: T) => void;
+  initialSortKeyIndex?: number;
 }
 
 function Table<T extends Record<string, any>>({
@@ -16,11 +17,12 @@ function Table<T extends Record<string, any>>({
   columns,
   data,
   onClick: handleClick,
+  initialSortKeyIndex = 0,
 }: TableProps<T>) {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof T | ElementRenderer<T> | StringRenderer<T> | null;
     isAscending: boolean;
-  }>({ key: columns[0], isAscending: true });
+  }>({ key: columns[initialSortKeyIndex], isAscending: true });
 
   const sortedData = data.sort((a, b) => {
     if (
