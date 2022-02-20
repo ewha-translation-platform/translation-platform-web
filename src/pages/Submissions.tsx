@@ -1,5 +1,6 @@
 import { SelectableTable } from "@/components";
 import { assignmentService, submissionService } from "@/services";
+import { CheckCircleIcon, XIcon } from "@heroicons/react/outline";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Switch from "react-switch";
@@ -111,7 +112,18 @@ function Submissions() {
                   ? new Date(Date.parse(submissionDateTime)).toLocaleString()
                   : "",
               ({ playCount }) => (playCount ? `${playCount}회` : "해당없음"),
-              ({ graded }) => (graded ? "완료" : "미완료"),
+              ({ graded }) =>
+                graded ? (
+                  <div className="flex items-center justify-between font-semibold">
+                    완료
+                    <CheckCircleIcon className="h-8 w-8 stroke-green-600" />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    미완료
+                    <XIcon className="stroke-danger h-8 w-8" />
+                  </div>
+                ),
               (row) => (
                 <label onClick={(e) => e.stopPropagation()}>
                   <Switch
@@ -146,7 +158,6 @@ function Submissions() {
           >
             비교
           </button>
-          <button className="btn bg-primary text-white">저장</button>
           <label className="ml-auto flex cursor-pointer items-center gap-2">
             전체 공개
             <Switch
