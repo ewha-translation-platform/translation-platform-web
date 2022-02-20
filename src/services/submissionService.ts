@@ -12,14 +12,30 @@ const submissionService = {
     const { data: submission } = await httpService.get<Submission>(
       `submissions/${id}`
     );
-    return submission;
+
+    if (submission.assignment.assignmentType === "TRANSLATION")
+      return { ...submission, audioFile: null };
+
+    const { data: audioFile } = await httpService.get<Blob>(
+      `submissions/${id}/audio`,
+      { responseType: "blob" }
+    );
+
+    return { ...submission, audioFile };
   },
 
-  async postOne(createSubmissionDto: CreateSubmissionDto) {
+  async postOne({ audioFile, ...createSubmissionDto }: CreateSubmissionDto) {
     const { data: submission } = await httpService.post<Submission>(
       "submissions",
       createSubmissionDto
     );
+
+    const formData = new FormData();
+    formData.append("audioFile", audioFile || "");
+    await httpService.post(`submissions/${submission.id}/audio`, formData, {
+      headers: { "content-type": "multipart/form-data" },
+    });
+
     return submission;
   },
 

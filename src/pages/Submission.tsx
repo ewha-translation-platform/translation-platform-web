@@ -1,20 +1,11 @@
+import { SequentialSubmission } from "@/components";
 import { TextArea } from "@/components/common";
 import { UserContext } from "@/contexts";
-import { useForceUpdate } from "@/hooks";
 import { assignmentService, submissionService } from "@/services";
-import chroma from "chroma-js";
-import {
-  RefCallback,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import WaveSurfer from "wavesurfer.js";
 import Loading from "./Loading";
 
 export default function AJAXWrapper() {
@@ -36,70 +27,28 @@ interface SubmissionProps {
 }
 function Submission({ assignment }: SubmissionProps) {
   const { user } = useContext(UserContext);
-  const forceUpdate = useForceUpdate();
-  const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
-  const audioFile = useRef<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { isDirty, isSubmitting },
-  } = useForm<Omit<CreateSubmissionDto, "audioFile">>({
+  const [submissionAudio, setSubmissionAudio] = useState<Blob | null>(null);
+  const { register, handleSubmit, reset } = useForm<
+    Omit<CreateSubmissionDto, "audioFile">
+  >({
     defaultValues: {
       studentId: user!.id,
       textFile: "",
       staged: false,
+      assignmentId: assignment.id,
+      playCount: 1,
+      playbackRate: 1.0,
     },
   });
 
-  const audioContainerRef: RefCallback<HTMLDivElement> = useCallback(
-    (node) => {
-      if (node) {
-        const waveSurfer = WaveSurfer.create({
-          container: node,
-          waveColor: chroma("#00462A").alpha(0.5).hex(),
-          progressColor: "#00462A",
-        });
-        waveSurfer.load(
-          URL.createObjectURL(assignment.audioFile || new Blob([]))
-        );
-        waveSurfer.on("ready", forceUpdate);
-        setWaveSurfer(waveSurfer);
-      }
-    },
-    [forceUpdate, assignment]
-  );
-
-  useEffect(() => {
-    return () => {
-      waveSurfer?.destroy();
-    };
-  }, [waveSurfer]);
-
-  async function temporalSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
+  async function onSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
     try {
       await submissionService.postOne({
         ...data,
-        audioFile: audioFile.current,
+        audioFile: submissionAudio,
         staged: false,
       });
       toast.success("임시저장되었습니다.");
-      reset(data);
-    } catch (e) {
-      toast.error(`에러가 발생하였습니다. ${e}`);
-    }
-  }
-
-  async function nonTemporalSubmit(
-    data: Omit<CreateSubmissionDto, "audioFile">
-  ) {
-    try {
-      await submissionService.postOne({
-        ...data,
-        audioFile: audioFile.current,
-        staged: true,
-      });
-      toast.success("제출되었습니다.");
       reset(data);
     } catch (e) {
       toast.error(`에러가 발생하였습니다. ${e}`);
@@ -126,43 +75,21 @@ function Submission({ assignment }: SubmissionProps) {
           ></TextArea>
         </section>
       ) : (
-        <>
-          <label className="flex flex-col">
-            원음
-            <div ref={audioContainerRef}></div>
-          </label>
-          {waveSurfer?.isReady && (
-            <section className="flex gap-2">
-              <button
-                className="btn bg-primary mr-auto text-white"
-                onClick={(e) => {
-                  e.preventDefault();
-                  waveSurfer.playPause();
-                }}
-              >
-                재생 / 일시정지
-              </button>
-            </section>
-          )}
-          <label className="flex flex-col">
-            제출
-            <button className="btn bg-orange-500 text-white">시작</button>
-          </label>
-        </>
+        <SequentialSubmission
+          audioFile={assignment.audioFile || new Blob([])}
+          sequentialRegions={assignment.sequentialRegions || []}
+          submissionAudio={submissionAudio || new Blob([])}
+          handleSubmssionAudioChange={(d) => setSubmissionAudio(d)}
+        />
       )}
       <section className="flex justify-end gap-2">
         <button
           className="btn bg-secondary-500 text-white"
-          onClick={handleSubmit(temporalSubmit)}
-          disabled={isSubmitting || !isDirty}
+          onClick={handleSubmit(onSubmit)}
         >
           임시저장
         </button>
-        <button
-          className="btn bg-primary text-white"
-          onClick={handleSubmit(nonTemporalSubmit)}
-          disabled={isSubmitting}
-        >
+        <button className="btn bg-primary text-white" disabled>
           제출
         </button>
       </section>
