@@ -83,6 +83,7 @@ interface Assignment {
   classId: number;
   name: string;
   description: string;
+  keywords: string | null;
   weekNumber: number;
   dueDateTime: string;
   assignmentType: AssignmentType;
@@ -99,6 +100,7 @@ interface CreateAssignmentDto {
   classId: number;
   name: string;
   description: string;
+  keywords: string | null;
   weekNumber: number;
   dueDateTime: string;
   assignmentType: AssignmentType;

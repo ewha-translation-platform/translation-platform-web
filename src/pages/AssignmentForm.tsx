@@ -29,7 +29,9 @@ function AssignmentForm() {
       classId: +classId!,
       assignmentType: "TRANSLATION",
       isPublic: false,
-      dueDateTime: new Date().toISOString().slice(0, -8),
+      dueDateTime: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, -8),
       playbackRate: 1.0,
     },
   });
@@ -43,9 +45,21 @@ function AssignmentForm() {
       (async function () {
         const assignment = await assignmentService.getOne(+assignmentId!);
         reset({
-          ...assignment,
+          assignmentType: assignment.assignmentType,
+          audioFile: assignment.audioFile,
+          classId: assignment.classId,
+          description: assignment.description,
+          isPublic: assignment.isPublic,
+          keywords: assignment.keywords,
+          maxPlayCount: assignment.maxPlayCount,
+          name: assignment.name,
+          playbackRate: assignment.playbackRate,
+          sequentialRegions: assignment.sequentialRegions,
+          textFile: assignment.textFile,
+          weekNumber: assignment.weekNumber,
+          feedbackCategoryIds: assignment.feedbackCategories.map((f) => f.id),
           dueDateTime: assignment.dueDateTime.slice(0, -8),
-        });
+        } as CreateAssignmentDto);
         setSequentialRegions(assignment.sequentialRegions || []);
         setAudioFile(assignment.audioFile);
       })();
@@ -54,23 +68,33 @@ function AssignmentForm() {
 
   const onSubmit: SubmitHandler<
     Omit<CreateAssignmentDto, "audioFile">
-  > = async (data, e) => {
-    e?.preventDefault();
-    if (!audioFile) {
-      toast.error("원음을 녹음하거나 업로드해주세요.");
-      return;
-    }
+  > = async (data) => {
     try {
-      console.log(sequentialRegions);
-      await assignmentService.postOne({
-        ...data,
-        dueDateTime: new Date(Date.parse(data.dueDateTime)).toISOString(),
-        textFile: "",
-        audioFile,
-        weekNumber: +data.weekNumber,
-        sequentialRegions,
-        feedbackCategoryIds: [],
-      });
+      if (assignmentId === "new") {
+        await assignmentService.postOne({
+          ...data,
+          dueDateTime: new Date(
+            Date.parse(data.dueDateTime) +
+              new Date().getTimezoneOffset() * 60000
+          ).toISOString(),
+          textFile: "",
+          audioFile,
+          weekNumber: +data.weekNumber,
+          sequentialRegions,
+          feedbackCategoryIds: [],
+        });
+      } else {
+        await assignmentService.patchOne(+assignmentId!, {
+          ...data,
+          dueDateTime: new Date(
+            Date.parse(data.dueDateTime) +
+              new Date().getTimezoneOffset() * 60000
+          ).toISOString(),
+          audioFile,
+          weekNumber: +data.weekNumber,
+          sequentialRegions,
+        });
+      }
       toast.success("저장되었습니다.");
     } catch (error) {
       toast.error(`오류가 발생했습니다 ${error}`);
@@ -114,6 +138,11 @@ function AssignmentForm() {
             {...register("assignmentType")}
             options={assignmentTypeOptions}
           />
+          <InputField
+            label="키워드"
+            className="col-span-full"
+            {...register("keywords")}
+          />
           <TextArea
             label="과제 설명"
             className="col-span-4"
@@ -151,6 +180,11 @@ function AssignmentForm() {
             textFile={watchTextFile}
             onTextFileChange={(t) => setValue("textFile", t)}
           />
+        ) : watchAssignmentType === "SIMULTANEOUS" ? (
+          <SimultaneousForm
+            audioFile={audioFile || new Blob([])}
+            handleAudioFileChange={(audioFile) => setAudioFile(audioFile)}
+          />
         ) : watchAssignmentType === "SEQUENTIAL" ? (
           <SequentialForm
             audioFile={audioFile || new Blob([])}
@@ -160,12 +194,7 @@ function AssignmentForm() {
               setSequentialRegions(regions)
             }
           />
-        ) : (
-          <SimultaneousForm
-            audioFile={audioFile || new Blob([])}
-            handleAudioFileChange={(audioFile) => setAudioFile(audioFile)}
-          />
-        )}
+        ) : null}
         <section className="col-span-full flex gap-2">
           <button
             className="btn bg-secondary-500 text-white"

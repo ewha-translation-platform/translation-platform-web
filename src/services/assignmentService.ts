@@ -38,11 +38,23 @@ const assignmentService = {
     return assignment;
   },
 
-  async patchOne(id: number, updateAssignmentDto: UpdateAssignmentDto) {
+  async patchOne(
+    id: number,
+    { audioFile, ...updateAssignmentDto }: UpdateAssignmentDto
+  ) {
     const { data: assignment } = await httpService.patch<Assignment>(
       `assignments/${id}`,
       updateAssignmentDto
     );
+
+    if (audioFile) {
+      const formData = new FormData();
+      formData.append("audioFile", audioFile || "");
+      await httpService.post(`assignments/${id}/audio`, formData, {
+        headers: { "content-type": "multipart/form-data" },
+      });
+    }
+
     return assignment;
   },
 
