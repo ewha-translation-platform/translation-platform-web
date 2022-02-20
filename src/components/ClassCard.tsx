@@ -18,6 +18,7 @@ function ClassCard({
     <Card
       title={classInfo.course.name}
       subtitle={`${classInfo.course.code} ${classInfo.classNumber}분반`}
+      description={`개설학과: ${classInfo.course.department.name}`}
       actions={
         displayActions && (
           <>
