@@ -3,7 +3,9 @@ import chroma from "chroma-js";
 import { RefCallback, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import WaveSurfer from "wavesurfer.js";
+import MinimapPlugin from "wavesurfer.js/src/plugin/minimap";
 import { RecorderModal } from ".";
+import getBlobDuration from "get-blob-duration";
 
 function SimultaneousForm({
   audioFile,
@@ -15,6 +17,7 @@ function SimultaneousForm({
   const forceUpdate = useForceUpdate();
   const [recorderOpened, setRecorderOpened] = useState(false);
   const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
+  const [duration, setDuration] = useState<number>();
 
   const audioContainerRef: RefCallback<HTMLDivElement> = useCallback(
     (node) => {
@@ -23,9 +26,13 @@ function SimultaneousForm({
           container: node,
           waveColor: chroma("#00462A").alpha(0.5).hex(),
           progressColor: "#00462A",
+          normalize: true,
+          scrollParent: true,
+          plugins: [MinimapPlugin.create({})],
         });
         waveSurfer.load(URL.createObjectURL(audioFile));
         waveSurfer.on("ready", forceUpdate);
+        getBlobDuration(audioFile).then(setDuration);
         setWaveSurfer(waveSurfer);
       }
     },
@@ -47,7 +54,14 @@ function SimultaneousForm({
   return (
     <>
       <section className="flex flex-col gap-2">
-        <span>원음</span>
+        <span>
+          원음:
+          {duration && (
+            <span>
+              {Math.floor(duration / 60)}분 {Math.round(duration % 60)}초
+            </span>
+          )}
+        </span>
         <div ref={audioContainerRef}></div>
         {waveSurfer?.isReady && (
           <section className="flex gap-2">
@@ -68,7 +82,11 @@ function SimultaneousForm({
             type="file"
             accept="audio/*"
             placeholder="원음"
-            disabled
+            onChange={(e) => {
+              if (!e.target.files) return;
+              const file = e.target.files[0];
+              handleAudioFileChange(file);
+            }}
           />
           <button
             className="btn bg-danger text-white"

@@ -1,6 +1,7 @@
 import { useForceUpdate } from "@/hooks";
 import { colorScheme } from "@/utils";
 import chroma from "chroma-js";
+import getBlobDuration from "get-blob-duration";
 import { RefCallback, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import WaveSurfer from "wavesurfer.js";
@@ -21,6 +22,7 @@ function SequentialForm({
   const forceUpdate = useForceUpdate();
   const [recorderOpened, setRecorderOpened] = useState(false);
   const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
+  const [duration, setDuration] = useState<number>();
 
   const audioContainerRef: RefCallback<HTMLDivElement> = useCallback(
     (node) => {
@@ -50,6 +52,7 @@ function SequentialForm({
           ]);
           forceUpdate();
         });
+        getBlobDuration(audioFile).then(setDuration);
         setWaveSurfer(waveSurfer);
       }
     },
@@ -71,7 +74,14 @@ function SequentialForm({
   return (
     <>
       <section className="flex flex-col gap-2">
-        <span>원음</span>
+        <span>
+          원음:
+          {duration && (
+            <span>
+              {Math.floor(duration / 60)}분 {Math.round(duration % 60)}초
+            </span>
+          )}
+        </span>
         <div ref={audioContainerRef}></div>
         {waveSurfer?.isReady && (
           <section className="flex gap-2">
@@ -117,7 +127,11 @@ function SequentialForm({
             type="file"
             accept="audio/*"
             placeholder="원음"
-            disabled
+            onChange={(e) => {
+              if (!e.target.files) return;
+              const file = e.target.files[0];
+              handleAudioFileChange(file);
+            }}
           />
           <button
             className="btn bg-danger text-white"

@@ -1,4 +1,4 @@
-import { SequentialSubmission } from "@/components";
+import { SequentialSubmission, SimultaneousSubmission } from "@/components";
 import { TextArea } from "@/components/common";
 import { UserContext } from "@/contexts";
 import { assignmentService, submissionService } from "@/services";
@@ -56,10 +56,11 @@ function Submission({ assignment }: SubmissionProps) {
   }
 
   return (
-    <main className="grid max-w-5xl grid-rows-[min-content_1fr_min-content] gap-2 p-4">
-      <h2 className="col-span-full">과제 제출</h2>
+    <main className="flex max-w-5xl flex-col gap-2 p-4">
+      <h2>과제 제출</h2>
+      <h3>키워드: {assignment.keywords}</h3>
       {assignment.assignmentType === "TRANSLATION" ? (
-        <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
+        <section className="grid flex-grow grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <TextArea
             label="원문"
             className="text-xl"
@@ -74,14 +75,20 @@ function Submission({ assignment }: SubmissionProps) {
             {...register("textFile", { required: true })}
           ></TextArea>
         </section>
-      ) : (
+      ) : assignment.assignmentType === "SEQUENTIAL" ? (
         <SequentialSubmission
           audioFile={assignment.audioFile || new Blob([])}
           sequentialRegions={assignment.sequentialRegions || []}
           submissionAudio={submissionAudio || new Blob([])}
           handleSubmssionAudioChange={(d) => setSubmissionAudio(d)}
         />
-      )}
+      ) : assignment.assignmentType === "SIMULTANEOUS" ? (
+        <SimultaneousSubmission
+          audioFile={assignment.audioFile || new Blob([])}
+          submissionAudio={submissionAudio || new Blob([])}
+          handleSubmssionAudioChange={(d) => setSubmissionAudio(d)}
+        />
+      ) : null}
       <section className="flex justify-end gap-2">
         <button
           className="btn bg-secondary-500 text-white"

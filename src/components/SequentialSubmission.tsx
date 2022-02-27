@@ -20,7 +20,6 @@ function SequentialSubmission({
 }: SequentialSubmissionProps) {
   const forceUpdate = useForceUpdate();
   const [isLastRegion, setIsLastRegion] = useState(false);
-  const [recordVisible, setRecordVisible] = useState(true);
   const [cur, setCur] = useState(-1);
   const waveSurfer = useRef<WaveSurfer>();
   const submissionSurfer = useRef<WaveSurfer>();
@@ -103,81 +102,75 @@ function SequentialSubmission({
           재생/일시정지
         </button>
       )}
-      {recordVisible && (
-        <section className="fixed top-0 left-0 grid h-screen w-screen place-content-center bg-black bg-opacity-40">
-          <div className="flex flex-col gap-2 bg-white p-4 shadow-md">
-            <h1>순차통역 과제</h1>
-            <div ref={recordVisualizerRef}></div>
-            <section className="grid grid-cols-2 gap-1">
+      <div className="flex flex-col gap-2 bg-white p-4 shadow-md">
+        <div ref={recordVisualizerRef}></div>
+        <section className="grid grid-cols-2 gap-1">
+          <button
+            className="btn bg-primary text-white"
+            onClick={(e) => {
+              e.preventDefault();
+              recorder.current?.stop();
+              setCur(-1);
+            }}
+          >
+            종료
+          </button>
+          {!isLastRegion &&
+            (cur === -1 ? (
               <button
-                className="btn bg-primary text-white"
-                onClick={(e) => {
+                className="btn bg-red-500 text-white"
+                onClick={async (e) => {
                   e.preventDefault();
-                  recorder.current?.stop();
-                  setCur(-1);
+                  if (!waveSurfer.current || !recordVisualizerRef.current)
+                    return;
+
+                  try {
+                    await recorder.current.connect(
+                      recordVisualizerRef.current,
+                      (data) => {
+                        handleSubmssionAudioChange(data);
+                      }
+                    );
+                  } catch (error) {
+                    toast.error("입력 장치를 연결할 수 없습니다.");
+                  }
+
+                  const nextCur = cur + 1;
+                  if (nextCur === sequentialRegions.length - 1)
+                    setIsLastRegion(true);
+
+                  Object.values(waveSurfer.current.regions.list)[
+                    nextCur
+                  ].play();
+
+                  setCur(nextCur);
                 }}
               >
-                종료
+                통역 시작
               </button>
-              {!isLastRegion &&
-                (cur === -1 ? (
-                  <button
-                    className="btn bg-red-500 text-white"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      if (!waveSurfer.current || !recordVisualizerRef.current)
-                        return;
+            ) : (
+              <button
+                className="btn bg-red-500 text-white"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!waveSurfer.current) return;
+                  const nextCur = cur + 1;
+                  if (nextCur === sequentialRegions.length - 1)
+                    setIsLastRegion(true);
 
-                      try {
-                        await recorder.current.connect(
-                          recordVisualizerRef.current,
-                          (data) => {
-                            handleSubmssionAudioChange(data);
-                            setRecordVisible(false);
-                          }
-                        );
-                      } catch (error) {
-                        toast.error("입력 장치를 연결할 수 없습니다.");
-                      }
+                  recorder.current?.pause();
+                  Object.values(waveSurfer.current.regions.list)[
+                    nextCur
+                  ].play();
 
-                      const nextCur = cur + 1;
-                      if (nextCur === sequentialRegions.length - 1)
-                        setIsLastRegion(true);
-
-                      Object.values(waveSurfer.current.regions.list)[
-                        nextCur
-                      ].play();
-
-                      setCur(nextCur);
-                    }}
-                  >
-                    시작하기
-                  </button>
-                ) : (
-                  <button
-                    className="btn bg-red-500 text-white"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (!waveSurfer.current) return;
-                      const nextCur = cur + 1;
-                      if (nextCur === sequentialRegions.length - 1)
-                        setIsLastRegion(true);
-
-                      recorder.current?.pause();
-                      Object.values(waveSurfer.current.regions.list)[
-                        nextCur
-                      ].play();
-
-                      setCur(nextCur);
-                    }}
-                  >
-                    다음
-                  </button>
-                ))}
-            </section>
-          </div>
+                  setCur(nextCur);
+                }}
+              >
+                다음
+              </button>
+            ))}
         </section>
-      )}
+      </div>
     </>
   );
 }
