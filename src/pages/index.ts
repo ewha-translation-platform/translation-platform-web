@@ -1,23 +1,11 @@
-import AssignmentForm from "./AssignmentForm";
-import Assignments from "./Assignments";
-import Auth from "./Auth";
-import Classes from "./Classes";
-import ClassForm from "./ClassForm";
-import Home from "./Home";
-import Students from "./Students";
-import Submission from "./Submission";
-import Submissions from "./Submissions";
-import SubmissionWithFeedback from "./SubmissionWithFeedback";
-
-export {
-  AssignmentForm,
-  Assignments,
-  Auth,
-  Classes,
-  ClassForm,
-  Home,
-  Students,
-  Submission,
-  Submissions,
-  SubmissionWithFeedback,
-};
+export { default as AssignmentForm } from "./AssignmentForm";
+export { default as Assignments } from "./Assignments";
+export { default as Auth } from "./Auth";
+export { default as Classes } from "./Classes";
+export { default as ClassForm } from "./ClassForm";
+export { default as Home } from "./Home";
+export { default as Register } from "./Register";
+export { default as Students } from "./Students";
+export { default as Submission } from "./Submission";
+export { default as Submissions } from "./Submissions";
+export { default as SubmissionWithFeedback } from "./SubmissionWithFeedback";
