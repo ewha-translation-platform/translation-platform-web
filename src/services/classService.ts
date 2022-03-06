@@ -34,6 +34,13 @@ export const classService = {
     return data;
   },
 
+  async addStudent(classId: number, studentId: string) {
+    const { data } = await httpService.post(
+      `classes/${classId}/students/${studentId}`
+    );
+    return data;
+  },
+
   async getAssignments(id: number) {
     const { data } = await httpService.get<Assignment[]>(
       `classes/${id}/assignments`

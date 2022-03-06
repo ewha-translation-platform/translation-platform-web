@@ -1,19 +1,21 @@
 import { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "@/contexts";
+import { authService } from "@/services";
 
 function Header() {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
 
-  function handleLogout() {
+  async function handleLogout() {
+    await authService.logout();
     setUser(null);
     navigate("/auth");
   }
 
   return (
     <header
-      className={`col-span-full flex items-center gap-2 bg-primary p-2 text-white`}
+      className={`bg-primary col-span-full flex items-center gap-2 p-2 text-white`}
     >
       <Link to="/" className="mr-auto">
         <h1 className="font-normal">Translation Platform</h1>
