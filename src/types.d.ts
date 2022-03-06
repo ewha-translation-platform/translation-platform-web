@@ -1,4 +1,4 @@
-interface Option<V = string | number> {
+interface Option<V extends string | number = string | number> {
   label: string;
   value: V;
 }
@@ -32,7 +32,6 @@ interface User {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
   department: string;
   college: string;
   role: Role;
@@ -42,8 +41,8 @@ interface CreateUserDto {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
   password: string;
+  departmentId: number;
   role: Role;
 }
 type UpdateUserDto = Omit<CreateUserDto, "id">;
