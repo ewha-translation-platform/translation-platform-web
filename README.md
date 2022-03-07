@@ -2,8 +2,6 @@
 
 ## Required Stack
 
----
-
 - Core
   - Typescript
   - [React](https://ko.reactjs.org)
@@ -14,8 +12,6 @@
   - [wavesurfer.js](https://wavesurfer-js.org)
 
 ## Conventions
-
----
 
 ### 1. Commit Messages
 
