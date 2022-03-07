@@ -33,6 +33,7 @@ function AssignmentForm() {
         .toISOString()
         .slice(0, -8),
       playbackRate: 1.0,
+      maxPlayCount: 0,
     },
   });
   const watchTextFile = watch("textFile", "");
@@ -77,7 +78,6 @@ function AssignmentForm() {
             Date.parse(data.dueDateTime) +
               new Date().getTimezoneOffset() * 60000
           ).toISOString(),
-          textFile: "",
           audioFile,
           weekNumber: +data.weekNumber,
           sequentialRegions,
