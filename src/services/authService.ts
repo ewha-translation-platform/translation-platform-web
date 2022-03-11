@@ -16,11 +16,11 @@ export const authService = {
       });
   },
 
-  async login(id: string, password: string): Promise<string> {
+  async login(email: string, password: string): Promise<string> {
     return await httpService
       .post<{ accessToken: string }>(
         "auth/login",
-        { id, password },
+        { email, password },
         { withCredentials: true }
       )
       .then(({ data: { accessToken } }) => {

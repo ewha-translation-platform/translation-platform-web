@@ -39,11 +39,11 @@ function Register() {
           onSubmit={handleSubmit(onSubmit)}
         >
           <InputField
-            label="학번 / 교번"
-            type="text"
+            label="이메일"
+            type="email"
             className="col-span-full"
             required
-            {...register("id")}
+            {...register("email")}
           />
           <InputField
             label="비밀번호"

@@ -29,7 +29,9 @@ interface CreateDepartmentDto {
 type UpdateDepartmentDto = Partial<CreateDepartmentDto>;
 
 interface User {
-  id: string;
+  id: number;
+  email: string;
+  academicId?: string;
   firstName: string;
   lastName: string;
   department: string;
@@ -38,7 +40,8 @@ interface User {
   isAdmin: boolean;
 }
 interface CreateUserDto {
-  id: string;
+  email: string;
+  academicId?: string;
   firstName: string;
   lastName: string;
   password: string;

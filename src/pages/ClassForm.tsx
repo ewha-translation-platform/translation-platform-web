@@ -25,8 +25,8 @@ function ClassForm() {
   const { user } = useContext(UserContext);
   const { classId } = useParams<{ classId: string }>();
 
-  const [professors, setProfessors] = useState<User[]>([]);
-  const [students, setStudents] = useState<User[]>([]);
+  const [professors, setProfessors] = useState<Required<User>[]>([]);
+  const [students, setStudents] = useState<Required<User>[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseModalVisible, setCourseModalVisible] = useState(false);
@@ -204,13 +204,13 @@ function ClassForm() {
           className="col-span-full"
           isSearchable
           options={professors.map((p) => ({
-            value: p.id,
+            value: p.academicId,
             label: `${p.department} ${p.lastName}${p.firstName}`,
           }))}
           value={professors
-            .filter((p) => watchProfessorIds?.includes(p.id))
+            .filter((p) => watchProfessorIds?.includes(p.academicId))
             .map((p) => ({
-              value: p.id,
+              value: p.academicId,
               label: `${p.department} ${p.lastName}${p.firstName}`,
             }))}
           onChange={(value) => console.log(value)}
@@ -266,11 +266,12 @@ function ClassForm() {
 
   async function handleFileInput(e: ChangeEvent<HTMLInputElement>) {
     function complete({ data }: Papa.ParseResult<string>) {
-      const students: User[] = data.slice(1, -1).map((d) => ({
+      const students: Required<User>[] = data.slice(1, -1).map((d) => ({
+        id: -1,
         email: d[6],
         lastName: d[4],
         firstName: d[4],
-        id: d[3],
+        academicId: d[3],
         role: "STUDENT",
         college: d[1],
         department: d[2],
@@ -279,7 +280,7 @@ function ClassForm() {
       setStudents(students);
       setValue(
         "studentIds",
-        students.map((s) => s.id)
+        students.map((s) => s.academicId)
       );
     }
     if (!e.target.files) return;

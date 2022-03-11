@@ -29,8 +29,8 @@ const userService = {
     return user;
   },
 
-  async findProfessorsWithName(name: string): Promise<User[]> {
-    const { data: users } = await httpService.get<User[]>("users", {
+  async findProfessorsWithName(name: string): Promise<Required<User>[]> {
+    const { data: users } = await httpService.get<Required<User>[]>("users", {
       params: { name, role: "PROFESSOR" },
     });
     return users;

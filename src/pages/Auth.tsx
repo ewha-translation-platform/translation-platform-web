@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 type Fields = {
-  id: string;
+  email: string;
   password: string;
 };
 
@@ -18,7 +18,7 @@ function Auth() {
   const { register, handleSubmit } = useForm<Fields>();
   const onSubmit: SubmitHandler<Fields> = async (data) => {
     try {
-      const accessToken = await authService.login(data.id, data.password);
+      const accessToken = await authService.login(data.email, data.password);
       const { id, role, isAdmin, firstName, lastName } =
         decode<any>(accessToken);
       setUser({ id, role, isAdmin, firstName, lastName });
@@ -33,12 +33,7 @@ function Auth() {
       <main className="border-primary flex max-w-sm flex-col gap-8 rounded-b-lg border-t-4 bg-gray-100 p-8 pt-8 shadow-md">
         <h2 className="text-center font-semibold">로그인</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2">
-          <InputField
-            label="학번 / 교번"
-            type="text"
-            inputMode="numeric"
-            {...register("id")}
-          />
+          <InputField label="이메일" type="email" {...register("email")} />
           <InputField
             label="비밀번호"
             type="password"
