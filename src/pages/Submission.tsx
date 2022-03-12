@@ -35,7 +35,7 @@ function Submission({ assignment }: SubmissionProps) {
     register,
     handleSubmit,
     reset,
-    formState: { isSubmitted, isSubmitting, isDirty },
+    formState: { isDirty },
   } = useForm<Omit<CreateSubmissionDto, "audioFile">>({
     defaultValues: {
       studentId: user!.id,
