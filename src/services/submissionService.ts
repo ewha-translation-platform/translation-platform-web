@@ -30,20 +30,34 @@ const submissionService = {
       createSubmissionDto
     );
 
-    const formData = new FormData();
-    formData.append("audioFile", audioFile || "");
-    await httpService.post(`submissions/${submission.id}/audio`, formData, {
-      headers: { "content-type": "multipart/form-data" },
-    });
+    if (audioFile) {
+      const formData = new FormData();
+      formData.append("audioFile", audioFile || "");
+      await httpService.post(`submissions/${submission.id}/audio`, formData, {
+        headers: { "content-type": "multipart/form-data" },
+      });
+    }
 
     return submission;
   },
 
-  async patchOne(id: number, updateSubmissionDto: UpdateSubmissionDto) {
+  async patchOne(
+    id: number,
+    { audioFile, ...updateSubmissionDto }: UpdateSubmissionDto
+  ) {
     const { data: submission } = await httpService.patch<Submission>(
       `submissions/${id}`,
       updateSubmissionDto
     );
+
+    if (audioFile) {
+      const formData = new FormData();
+      formData.append("audioFile", audioFile || "");
+      await httpService.post(`submissions/${id}/audio`, formData, {
+        headers: { "content-type": "multipart/form-data" },
+      });
+    }
+
     return submission;
   },
 
@@ -65,7 +79,7 @@ const submissionService = {
   },
 
   async stage(id: number) {
-    return Promise.resolve("OK");
+    await httpService.post(`submissions/${id}/stage`);
   },
 };
 

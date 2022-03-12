@@ -35,6 +35,7 @@ function Students() {
             const { ok } = await classService.addStudent(+classId!, studentId);
             if (ok) {
               toast.success("수강생을 추가하였습니다.");
+              classService.getStudents(+classId!).then(setStudents);
             } else {
               toast.error("오류가 발생하였습니다.");
             }

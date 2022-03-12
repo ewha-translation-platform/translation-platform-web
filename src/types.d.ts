@@ -185,7 +185,6 @@ interface Feedback {
   selectedSourceText: boolean;
   comment: string | null;
   categories: FeedbackCategory[];
-  staged: boolean;
 }
 interface CreateFeedbackDto {
   submissionId: number;
@@ -194,6 +193,5 @@ interface CreateFeedbackDto {
   selectedSourceText: boolean;
   comment: string | null;
   categoryIds: number[];
-  staged: boolean;
 }
 type UpdateFeedbackDto = Partial<CreateFeedbackDto>;

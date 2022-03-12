@@ -68,7 +68,7 @@ function AssignmentForm() {
   }, [assignmentId, reset]);
 
   const onSubmit: SubmitHandler<
-    Omit<CreateAssignmentDto, "audioFile">
+    Omit<CreateAssignmentDto, "audioFile" | "sequentialRegions">
   > = async (data) => {
     try {
       if (assignmentId === "new") {
@@ -204,13 +204,13 @@ function AssignmentForm() {
           >
             뒤로가기
           </button>
-          <button className="btn bg-primary ml-auto text-white" disabled>
+          <button className="btn ml-auto bg-primary text-white" disabled>
             미리보기
           </button>
           <input
             type="submit"
             value="확인"
-            className="btn bg-primary justify-self-end text-white hover:opacity-70"
+            className="btn justify-self-end bg-primary text-white hover:opacity-70"
             disabled={isSubmitting || isSubmitted}
           />
         </section>

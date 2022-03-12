@@ -27,10 +27,16 @@ interface SubmissionProps {
 }
 function Submission({ assignment }: SubmissionProps) {
   const { user } = useContext(UserContext);
+  const [disabled, setDisabled] = useState(false);
   const [submissionAudio, setSubmissionAudio] = useState<Blob | null>(null);
-  const { register, handleSubmit, reset } = useForm<
-    Omit<CreateSubmissionDto, "audioFile">
-  >({
+  const [isAudioDirty, setIsAudioDirty] = useState(false);
+  const [submissionId, setSubmissionId] = useState<number | null>(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isSubmitted, isSubmitting, isDirty },
+  } = useForm<Omit<CreateSubmissionDto, "audioFile">>({
     defaultValues: {
       studentId: user!.id,
       textFile: "",
@@ -41,18 +47,56 @@ function Submission({ assignment }: SubmissionProps) {
     },
   });
 
+  useEffect(() => {
+    assignmentService.getMySubmission(assignment.id).then((submission) => {
+      if (!!submission) {
+        setSubmissionId(submission.id);
+        reset(submission);
+      }
+    });
+  }, [assignment.id, reset]);
+
   async function onSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
     try {
-      await submissionService.postOne({
-        ...data,
-        audioFile: submissionAudio,
-        staged: false,
-      });
+      if (!submissionId) {
+        await submissionService.postOne({
+          ...data,
+          audioFile: submissionAudio,
+          staged: false,
+        });
+      } else {
+        await submissionService.patchOne(submissionId, {
+          textFile: data.textFile,
+          playCount: data.playCount,
+          playbackRate: data.playbackRate,
+          audioFile: submissionAudio,
+          staged: false,
+        });
+      }
       toast.success("임시저장되었습니다.");
       reset(data);
     } catch (e) {
       toast.error(`에러가 발생하였습니다. ${e}`);
     }
+  }
+
+  function stageSubmission() {
+    setDisabled(true);
+    if (submissionId) {
+      submissionService
+        .stage(submissionId)
+        .then(() => {
+          toast.success("과제를 제출했습니다.");
+          setDisabled(false);
+        })
+        .catch((err) => toast.error(err.message));
+    }
+  }
+
+  function handleSubmissionAudioChange(d: Blob | null) {
+    setSubmissionAudio(d);
+    console.log(d);
+    setIsAudioDirty(true);
   }
 
   return (
@@ -80,23 +124,31 @@ function Submission({ assignment }: SubmissionProps) {
           audioFile={assignment.audioFile || new Blob([])}
           sequentialRegions={assignment.sequentialRegions || []}
           submissionAudio={submissionAudio || new Blob([])}
-          handleSubmssionAudioChange={(d) => setSubmissionAudio(d)}
+          handleSubmssionAudioChange={handleSubmissionAudioChange}
         />
       ) : assignment.assignmentType === "SIMULTANEOUS" ? (
         <SimultaneousSubmission
           audioFile={assignment.audioFile || new Blob([])}
           submissionAudio={submissionAudio || new Blob([])}
-          handleSubmssionAudioChange={(d) => setSubmissionAudio(d)}
+          handleSubmssionAudioChange={handleSubmissionAudioChange}
         />
       ) : null}
       <section className="flex justify-end gap-2">
         <button
           className="btn bg-secondary-500 text-white"
           onClick={handleSubmit(onSubmit)}
+          disabled={!(isDirty || isAudioDirty)}
         >
           임시저장
         </button>
-        <button className="btn bg-primary text-white" disabled>
+        <button
+          className="btn bg-primary text-white"
+          disabled={!submissionId || disabled}
+          onClick={(e) => {
+            e.preventDefault();
+            stageSubmission();
+          }}
+        >
           제출
         </button>
       </section>

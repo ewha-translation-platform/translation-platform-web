@@ -102,7 +102,6 @@ function SubmissionWithFeedback({
           comment: "",
           professorId: user!.id,
           submissionId: submission.id,
-          staged: false,
         });
         dispatch({ type: "ADD_FEEDBACK", payload: newFeedback });
         setHighlightedRegions([
@@ -278,8 +277,8 @@ function SubmissionWithFeedback({
                 onChangeFeedback={handlePatchFeedback}
               />
             ))}
-            <li className="border-primary flex flex-col items-center rounded-md border-2 border-dashed p-4">
-              <PlusIcon className="fill-primary h-16 w-16" />
+            <li className="flex flex-col items-center rounded-md border-2 border-dashed border-primary p-4">
+              <PlusIcon className="h-16 w-16 fill-primary" />
               <span className="text-sm">
                 추가하려면 원문/번역문 창에서 텍스트를 선택하세요
               </span>
@@ -310,7 +309,7 @@ function SubmissionWithFeedback({
           ></textarea>
           <button
             type="submit"
-            className="btn bg-primary self-end text-white"
+            className="btn self-end bg-primary text-white"
             disabled={!isDirty || isSubmitting}
           >
             {isDirty ? "저장" : "저장됨"}

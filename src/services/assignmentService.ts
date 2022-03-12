@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import httpService from "./httpService";
 
 const assignmentService = {
@@ -23,17 +24,40 @@ const assignmentService = {
     return { ...assignment, audioFile };
   },
 
+  async getMySubmission(id: number): Promise<Submission | null> {
+    try {
+      const { data: submission } = await httpService.get<Submission>(
+        `assignments/${id}/submissions/my`
+      );
+
+      if (submission.assignment.assignmentType === "TRANSLATION")
+        return { ...submission, audioFile: null };
+
+      const { data: audioFile } = await httpService.get<Blob>(
+        `submissions/${id}/audio`,
+        { responseType: "blob" }
+      );
+
+      return { ...submission, audioFile };
+    } catch (error) {
+      toast.info("저장된 제출물이 없습니다.");
+      return null;
+    }
+  },
+
   async postOne({ audioFile, ...createAssignmentDto }: CreateAssignmentDto) {
     const { data: assignment } = await httpService.post<Assignment>(
       "assignments",
       createAssignmentDto
     );
 
-    const formData = new FormData();
-    formData.append("audioFile", audioFile || "");
-    await httpService.post(`assignments/${assignment.id}/audio`, formData, {
-      headers: { "content-type": "multipart/form-data" },
-    });
+    if (audioFile) {
+      const formData = new FormData();
+      formData.append("audioFile", audioFile || "");
+      await httpService.post(`assignments/${assignment.id}/audio`, formData, {
+        headers: { "content-type": "multipart/form-data" },
+      });
+    }
 
     return assignment;
   },
