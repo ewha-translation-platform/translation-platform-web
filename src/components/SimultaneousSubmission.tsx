@@ -43,6 +43,7 @@ function SimultaneousSubmission({
         container: node,
         waveColor: chroma("#00462A").alpha(0.5).hex(),
         progressColor: "#00462A",
+        interact: false,
       });
       w.load(URL.createObjectURL(audioFile));
       w.on("ready", forceUpdate);
@@ -97,9 +98,7 @@ function SimultaneousSubmission({
               try {
                 await recorder.current.connect(
                   recordVisualizerRef.current,
-                  (data) => {
-                    handleSubmssionAudioChange(data);
-                  }
+                  handleSubmssionAudioChange
                 );
                 setIsRecording(true);
                 recorder.current.start();
