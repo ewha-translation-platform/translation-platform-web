@@ -3,7 +3,10 @@ import Axios from "axios";
 import { authService } from "./authService";
 
 const client = Axios.create({
-  baseURL: "http://localhost:3030/api",
+  baseURL:
+    process.env.NODE_ENV === "production"
+      ? "/api"
+      : "http://localhost:3030/api",
   withCredentials: true,
 });
 
