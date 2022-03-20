@@ -17,10 +17,11 @@ const assignmentService = {
     if (assignment.assignmentType === "TRANSLATION")
       return { ...assignment, audioFile: null };
 
-    const { data: audioFile } = await httpService.get<Blob>(
-      `assignments/${id}/audio`,
-      { responseType: "blob" }
-    );
+    const audioFile = await httpService
+      .get<Blob>(`assignments/${id}/audio`, { responseType: "blob" })
+      .then(({ data }) => data)
+      .catch(() => null);
+
     return { ...assignment, audioFile };
   },
 
@@ -34,11 +35,20 @@ const assignmentService = {
         return { ...submission, audioFile: null };
 
       const { data: audioFile } = await httpService.get<Blob>(
-        `submissions/${id}/audio`,
+        `assignments/${submission.assignment.id}/audio`,
         { responseType: "blob" }
       );
 
-      return { ...submission, audioFile };
+      const { data: submissionAudio } = await httpService.get<Blob>(
+        `submissions/${submission.id}/audio`,
+        { responseType: "blob" }
+      );
+
+      return {
+        ...submission,
+        assignment: { ...submission.assignment, audioFile },
+        audioFile: submissionAudio,
+      };
     } catch (error) {
       toast.info("저장된 제출물이 없습니다.");
       return null;

@@ -1,11 +1,9 @@
-import { useForceUpdate } from "@/hooks";
-import chroma from "chroma-js";
-import { RefCallback, useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import WaveSurfer from "wavesurfer.js";
-import MinimapPlugin from "wavesurfer.js/src/plugin/minimap";
-import { RecorderModal } from ".";
+import { useForceUpdate, useWaveSurfer } from "@/hooks";
 import getBlobDuration from "get-blob-duration";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import MinimapPlugin from "wavesurfer.js/src/plugin/minimap";
+import RecorderModal from "./RecorderModal";
 
 function SimultaneousForm({
   audioFile,
@@ -16,34 +14,20 @@ function SimultaneousForm({
 }) {
   const forceUpdate = useForceUpdate();
   const [recorderOpened, setRecorderOpened] = useState(false);
-  const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
+  const waveSurfer = useWaveSurfer({
+    audioFile,
+    onCreate: (w) => {
+      w.on("ready", forceUpdate);
+    },
+    normalize: true,
+    scrollParent: true,
+    plugins: [MinimapPlugin.create({})],
+  });
   const [duration, setDuration] = useState<number>();
 
-  const audioContainerRef: RefCallback<HTMLDivElement> = useCallback(
-    (node) => {
-      if (node) {
-        const waveSurfer = WaveSurfer.create({
-          container: node,
-          waveColor: chroma("#00462A").alpha(0.5).hex(),
-          progressColor: "#00462A",
-          normalize: true,
-          scrollParent: true,
-          plugins: [MinimapPlugin.create({})],
-        });
-        waveSurfer.load(URL.createObjectURL(audioFile));
-        waveSurfer.on("ready", forceUpdate);
-        getBlobDuration(audioFile).then(setDuration);
-        setWaveSurfer(waveSurfer);
-      }
-    },
-    [forceUpdate, audioFile]
-  );
-
   useEffect(() => {
-    return () => {
-      waveSurfer?.destroy();
-    };
-  }, [waveSurfer]);
+    if (audioFile.size > 0) getBlobDuration(audioFile).then(setDuration);
+  }, [audioFile]);
 
   const handleSave = async (data: Blob) => {
     setRecorderOpened(false);
@@ -54,27 +38,35 @@ function SimultaneousForm({
   return (
     <>
       <section className="flex flex-col gap-2">
-        <span>
-          원음:
-          {duration && (
+        {audioFile.size > 0 ? (
+          <>
             <span>
-              {Math.floor(duration / 60)}분 {Math.round(duration % 60)}초
+              원음:
+              {duration && (
+                <span>
+                  {Math.floor(duration / 60)}분 {Math.round(duration % 60)}초
+                </span>
+              )}
             </span>
-          )}
-        </span>
-        <div ref={audioContainerRef}></div>
-        {waveSurfer?.isReady && (
-          <section className="flex gap-2">
-            <button
-              className="btn bg-primary mr-auto text-white"
-              onClick={(e) => {
-                e.preventDefault();
-                waveSurfer.playPause();
-              }}
-            >
-              재생 / 일시정지
-            </button>
-          </section>
+            <div ref={waveSurfer.refCallback}></div>
+            {waveSurfer.surfer.current?.isReady ? (
+              <section className="flex gap-2">
+                <button
+                  className="btn mr-auto bg-primary text-white"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    waveSurfer.surfer.current?.playPause();
+                  }}
+                >
+                  재생 / 일시정지
+                </button>
+              </section>
+            ) : (
+              <div className="text-center">loading...</div>
+            )}
+          </>
+        ) : (
+          <div className="text-center">음성 파일이 없습니다.</div>
         )}
         <section className="flex gap-2">
           <input
@@ -99,7 +91,12 @@ function SimultaneousForm({
           </button>
         </section>
       </section>
-      {recorderOpened && <RecorderModal onSave={handleSave} />}
+      {recorderOpened && (
+        <RecorderModal
+          onSave={handleSave}
+          onClose={() => setRecorderOpened(false)}
+        />
+      )}
     </>
   );
 }

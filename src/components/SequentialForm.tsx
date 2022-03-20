@@ -1,69 +1,61 @@
-import { useForceUpdate } from "@/hooks";
+import { useForceUpdate, useWaveSurfer } from "@/hooks";
 import { colorScheme } from "@/utils";
-import chroma from "chroma-js";
 import getBlobDuration from "get-blob-duration";
-import { RefCallback, useCallback, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import WaveSurfer from "wavesurfer.js";
+import MinimapPlugin from "wavesurfer.js/src/plugin/minimap";
 import RegionsPlugin from "wavesurfer.js/src/plugin/regions";
-import { RecorderModal } from ".";
+import RecorderModal from "./RecorderModal";
+
+interface SequentialFormProps {
+  audioFile: Blob;
+  handleAudioFileChange: Dispatch<SetStateAction<Blob | null>>;
+  sequentialRegions: Region[];
+  handleSequentialRegionsChange: Dispatch<SetStateAction<Region[]>>;
+}
 
 function SequentialForm({
   audioFile,
   handleAudioFileChange,
   sequentialRegions,
   handleSequentialRegionsChange,
-}: {
-  audioFile: Blob;
-  handleAudioFileChange: (data: Blob) => void;
-  sequentialRegions: Region[];
-  handleSequentialRegionsChange: (data: Region[]) => void;
-}) {
+}: SequentialFormProps) {
   const forceUpdate = useForceUpdate();
   const [recorderOpened, setRecorderOpened] = useState(false);
-  const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
   const [duration, setDuration] = useState<number>();
-
-  const audioContainerRef: RefCallback<HTMLDivElement> = useCallback(
-    (node) => {
-      if (node) {
-        const waveSurfer = WaveSurfer.create({
-          container: node,
-          waveColor: chroma("#00462A").alpha(0.5).hex(),
-          progressColor: "#00462A",
-          plugins: [
-            RegionsPlugin.create({
-              dragSelection: true,
-              slop: 5,
-              regions: sequentialRegions.map(({ start, end }, idx) => ({
-                id: idx.toString(),
-                start,
-                end,
-              })),
-            }),
-          ],
-        });
-        waveSurfer.load(URL.createObjectURL(audioFile));
-        waveSurfer.on("ready", forceUpdate);
-        waveSurfer.on("region-update-end", (obj) => {
-          handleSequentialRegionsChange([
-            ...sequentialRegions,
-            { start: obj.start, end: obj.end },
-          ]);
-          forceUpdate();
-        });
-        getBlobDuration(audioFile).then(setDuration);
-        setWaveSurfer(waveSurfer);
-      }
+  const waveSurfer = useWaveSurfer({
+    audioFile,
+    onCreate: (w) => {
+      w.on("load", forceUpdate);
+      w.on("ready", forceUpdate);
+      w.on("region-update-end", (obj) => {
+        handleSequentialRegionsChange((x) => [
+          ...x,
+          { start: obj.start * 1000, end: obj.end * 1000 },
+        ]);
+        forceUpdate();
+      });
     },
-    [forceUpdate, audioFile, sequentialRegions, handleSequentialRegionsChange]
-  );
+    interact: true,
+    normalize: true,
+    scrollParent: true,
+    plugins: [
+      RegionsPlugin.create({
+        dragSelection: true,
+        slop: 5,
+        regions: sequentialRegions.map(({ start, end }, idx) => ({
+          id: idx.toString(),
+          start: start / 1000,
+          end: end / 1000,
+        })),
+      }),
+      MinimapPlugin.create({}),
+    ],
+  });
 
   useEffect(() => {
-    return () => {
-      waveSurfer?.destroy();
-    };
-  }, [waveSurfer]);
+    if (audioFile.size > 0) getBlobDuration(audioFile).then(setDuration);
+  }, [audioFile]);
 
   const handleSave = async (data: Blob) => {
     setRecorderOpened(false);
@@ -82,28 +74,29 @@ function SequentialForm({
             </span>
           )}
         </span>
-        <div ref={audioContainerRef}></div>
-        {waveSurfer?.isReady && (
+        <div ref={waveSurfer.refCallback}></div>
+        {waveSurfer.surfer.current?.isReady ? (
           <section className="flex gap-2">
             <section className="flex gap-1">
-              {Object.values(waveSurfer.regions.list).map((r, idx) => (
-                <button
-                  className="btn-sm text-white"
-                  key={r.id}
-                  style={{ backgroundColor: colorScheme(idx) }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    r.play();
-                  }}
-                >
-                  구간{idx + 1}
-                </button>
-              ))}
+              {Object.values(waveSurfer.surfer.current.regions.list).map(
+                (r, idx) => (
+                  <button
+                    type="button"
+                    className="btn-sm text-white"
+                    key={r.id}
+                    style={{ backgroundColor: colorScheme(idx) }}
+                    onClick={() => r.play()}
+                  >
+                    구간{idx + 1}
+                  </button>
+                )
+              )}
               <button
+                type="button"
                 className="btn-sm bg-danger text-white"
                 onClick={() => {
                   if (!window.confirm("구간을 전부 삭제합니다.")) return;
-                  waveSurfer.regions.clear();
+                  waveSurfer.surfer.current?.regions.clear();
                   handleSequentialRegionsChange([]);
                 }}
               >
@@ -111,15 +104,15 @@ function SequentialForm({
               </button>
             </section>
             <button
-              className="btn bg-primary mr-auto text-white"
-              onClick={(e) => {
-                e.preventDefault();
-                waveSurfer.playPause();
-              }}
+              type="button"
+              className="btn mr-auto bg-primary text-white"
+              onClick={() => waveSurfer.surfer.current?.playPause()}
             >
               재생 / 일시정지
             </button>
           </section>
+        ) : (
+          <div>Loading...</div>
         )}
         <section className="flex gap-2">
           <input
@@ -134,17 +127,20 @@ function SequentialForm({
             }}
           />
           <button
+            type="button"
             className="btn bg-danger text-white"
-            onClick={(e) => {
-              e.preventDefault();
-              setRecorderOpened(true);
-            }}
+            onClick={() => setRecorderOpened(true)}
           >
             녹음하기
           </button>
         </section>
       </section>
-      {recorderOpened && <RecorderModal onSave={handleSave} />}
+      {recorderOpened && (
+        <RecorderModal
+          onSave={handleSave}
+          onClose={() => setRecorderOpened(false)}
+        />
+      )}
     </>
   );
 }

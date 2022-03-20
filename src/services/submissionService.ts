@@ -16,10 +16,10 @@ const submissionService = {
     if (submission.assignment.assignmentType === "TRANSLATION")
       return { ...submission, audioFile: null };
 
-    const { data: audioFile } = await httpService.get<Blob>(
-      `submissions/${id}/audio`,
-      { responseType: "blob" }
-    );
+    const audioFile = await httpService
+      .get<Blob>(`submissions/${id}/audio`, { responseType: "blob" })
+      .then(({ data }) => data)
+      .catch(() => null);
 
     return { ...submission, audioFile };
   },

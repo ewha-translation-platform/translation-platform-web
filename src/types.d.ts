@@ -129,6 +129,7 @@ interface Submission {
   openedToStudent: boolean;
 
   audioFile: Blob | null;
+  sequentialRegions: Region[] | null;
   playCount: number | null;
   playbackRate: number | null;
 }
@@ -139,6 +140,7 @@ interface CreateSubmissionDto {
   staged: boolean;
 
   audioFile: Blob | null;
+  sequentialRegions: Region[] | null;
   playCount: number | null;
   playbackRate: number | null;
 }
@@ -151,6 +153,7 @@ type UpdateSubmissionDto = Partial<{
   openedToStudent: boolean;
 
   audioFile: Blob | null;
+  sequentialRegions: Region[] | null;
   playCount: number | null;
   playbackRate: number | null;
 }>;

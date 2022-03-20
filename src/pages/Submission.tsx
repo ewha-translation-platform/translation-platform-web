@@ -29,6 +29,9 @@ function Submission({ assignment }: SubmissionProps) {
   const { user } = useContext(UserContext);
   const [disabled, setDisabled] = useState(false);
   const [submissionAudio, setSubmissionAudio] = useState<Blob | null>(null);
+  const [submissionRegions, setSubmissionRegions] = useState<Region[] | null>(
+    []
+  );
   const [isAudioDirty, setIsAudioDirty] = useState(false);
   const [submissionId, setSubmissionId] = useState<number | null>(null);
   const {
@@ -49,27 +52,46 @@ function Submission({ assignment }: SubmissionProps) {
 
   useEffect(() => {
     assignmentService.getMySubmission(assignment.id).then((submission) => {
-      if (!!submission) {
-        setSubmissionId(submission.id);
-        reset(submission);
-      }
+      if (!submission) return;
+      const {
+        id,
+        assignment,
+        audioFile,
+        textFile,
+        playCount,
+        playbackRate,
+        sequentialRegions,
+      } = submission;
+      setSubmissionId(id);
+      setSubmissionAudio(audioFile);
+      setSubmissionRegions(sequentialRegions);
+      reset({
+        assignmentId: assignment.id,
+        studentId: user!.id,
+        textFile,
+        playCount,
+        playbackRate,
+      } as Omit<CreateSubmissionDto, "audioFile">);
     });
-  }, [assignment.id, reset]);
+  }, [assignment.id, reset, user]);
 
   async function onSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
     try {
       if (!submissionId) {
-        await submissionService.postOne({
+        const submission = await submissionService.postOne({
           ...data,
           audioFile: submissionAudio,
+          sequentialRegions: submissionRegions,
           staged: false,
         });
+        setSubmissionId(submission.id);
       } else {
         await submissionService.patchOne(submissionId, {
           textFile: data.textFile,
           playCount: data.playCount,
           playbackRate: data.playbackRate,
           audioFile: submissionAudio,
+          sequentialRegions: submissionRegions,
           staged: false,
         });
       }
@@ -95,12 +117,11 @@ function Submission({ assignment }: SubmissionProps) {
 
   function handleSubmissionAudioChange(d: Blob | null) {
     setSubmissionAudio(d);
-    console.log(d);
     setIsAudioDirty(true);
   }
 
   return (
-    <main className="flex max-w-5xl flex-col gap-2 p-4">
+    <main className="flex max-w-5xl flex-col gap-2 overflow-auto p-4">
       <h2>과제 제출</h2>
       <h3>키워드: {assignment.keywords}</h3>
       {assignment.assignmentType === "TRANSLATION" ? (
@@ -123,8 +144,10 @@ function Submission({ assignment }: SubmissionProps) {
         <SequentialSubmission
           audioFile={assignment.audioFile || new Blob([])}
           sequentialRegions={assignment.sequentialRegions || []}
+          submissionRegions={submissionRegions || []}
           submissionAudio={submissionAudio || new Blob([])}
           handleSubmssionAudioChange={handleSubmissionAudioChange}
+          handleSubmissionRegionsChange={setSubmissionRegions}
         />
       ) : assignment.assignmentType === "SIMULTANEOUS" ? (
         <SimultaneousSubmission
@@ -142,12 +165,10 @@ function Submission({ assignment }: SubmissionProps) {
           임시저장
         </button>
         <button
+          type="button"
           className="btn bg-primary text-white"
           disabled={!submissionId || disabled}
-          onClick={(e) => {
-            e.preventDefault();
-            stageSubmission();
-          }}
+          onClick={stageSubmission}
         >
           제출
         </button>

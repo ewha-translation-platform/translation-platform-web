@@ -1,121 +1,89 @@
-// import { useForceUpdate } from "@/hooks";
-import { RefCallback, useCallback, useState, useEffect } from "react";
-import WaveSurfer from "wavesurfer.js";
-import MicrophonePlugin from "wavesurfer.js/src/plugin/microphone";
-import { toast } from "react-toastify";
+import { useRecorder } from "@/hooks";
+import { XIcon } from "@heroicons/react/solid";
+import { useState } from "react";
+import { useStopwatch } from "react-timer-hook";
 
 interface RecorderModalProps {
   onSave: (data: Blob) => void;
+  onClose: () => void;
 }
 
-function RecorderModal({ onSave: handleSave }: RecorderModalProps) {
-  // const forceUpdate = useForceUpdate();
-  const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
-  const [record, setRecord] = useState<Blob[]>([]);
-
-  const recorderRef: RefCallback<HTMLDivElement> = useCallback((node) => {
-    if (node) {
-      const w = WaveSurfer.create({
-        container: node,
-        interact: false,
-        cursorWidth: 0,
-        plugins: [MicrophonePlugin.create({})],
-      });
-
-      w.microphone.on("deviceReady", (stream: MediaStream) => {
-        const m = new MediaRecorder(stream);
-        m.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            console.log(e.data);
-            setRecord((record) => [...record, e.data]);
-          }
-        };
-        m.start();
-        setMediaRecorder(m);
-        toast.info(`녹음을 시작합니다`, { hideProgressBar: true });
-      });
-
-      w.microphone.on("deviceError", (code) => {
-        toast.error(`녹음을 시작할 수 없습니다: ${code}`);
-      });
-
-      setWaveSurfer(w);
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (waveSurfer) {
-        waveSurfer.microphone.stopDevice();
-        waveSurfer.microphone.destroy();
-        waveSurfer.destroy();
-      }
-    };
-  }, [waveSurfer]);
+function RecorderModal({
+  onSave: handleSave,
+  onClose: handleClose,
+}: RecorderModalProps) {
+  const [isRecordStarted, setIsRecordStarted] = useState(false);
+  const recorder = useRecorder(handleSave);
+  const stopWatch = useStopwatch({ autoStart: false });
 
   return (
-    <div
-      className={`absolute top-0 left-0 z-20 grid h-full w-full place-content-center bg-black bg-opacity-50`}
-    >
+    <div className="absolute top-0 left-0 z-20 grid h-full w-full place-content-center bg-black bg-opacity-50">
       <section
-        className={`w-96 rounded-md border-4 bg-white p-4 shadow-xl ${
-          mediaRecorder?.state === "recording" ? "border-red-500" : ""
+        className={`relative w-96 space-y-2 rounded-md border-4 bg-white p-4 shadow-xl ${
+          recorder.isRecording ? "border-red-500" : ""
         }`}
       >
-        <div className="w-full" ref={recorderRef}></div>
-        {waveSurfer && (
-          <div className="flex justify-center gap-2">
-            {mediaRecorder === undefined ? (
+        <XIcon
+          type="button"
+          className="absolute top-0 right-0 h-8 w-8 cursor-pointer rounded-md bg-danger p-1 text-white hover:opacity-70"
+          onClick={() => {
+            if (!window.confirm("녹음을 취소하시겠습니까?")) return;
+            recorder.isRecording && recorder.stop();
+            handleClose();
+          }}
+        ></XIcon>
+        <div className="text-center text-xl">{stopWatch.seconds}초</div>
+        <div className="flex justify-center gap-2">
+          {!isRecordStarted ? (
+            <button
+              type="button"
+              className="btn bg-primary text-white hover:bg-opacity-70"
+              onClick={async (e) => {
+                if (await recorder.ready()) {
+                  recorder.start();
+                  setIsRecordStarted(true);
+                }
+                stopWatch.start();
+              }}
+            >
+              녹음 시작
+            </button>
+          ) : recorder.isRecording ? (
+            <button
+              type="button"
+              className="btn bg-yellow-500 text-white hover:bg-opacity-70"
+              onClick={(e) => {
+                recorder.pause();
+                stopWatch.pause();
+              }}
+            >
+              멈추기
+            </button>
+          ) : (
+            <>
               <button
-                className="btn bg-primary text-white hover:bg-opacity-70"
+                type="button"
+                className="btn bg-blue-500 text-white hover:bg-opacity-70"
                 onClick={(e) => {
-                  e.preventDefault();
-                  waveSurfer.microphone.start();
+                  recorder.start();
+                  stopWatch.start();
                 }}
               >
-                녹음 시작
+                계속 녹음
               </button>
-            ) : mediaRecorder.state === "recording" ? (
               <button
+                type="button"
                 className="btn bg-danger text-white hover:bg-opacity-70"
                 onClick={(e) => {
-                  e.preventDefault();
-                  toast.warning("일시정지 기능은 구현 중에 있습니다.");
-                  mediaRecorder.stop();
-                  waveSurfer.microphone.pause();
-                  waveSurfer.empty();
+                  recorder.stop();
+                  stopWatch.pause();
                 }}
               >
-                정지
+                완료
               </button>
-            ) : (
-              <>
-                <button
-                  className="btn bg-blue-500 text-white hover:bg-opacity-70"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // mediaRecorder.start();
-                    // waveSurfer.microphone.play();
-                    // forceUpdate();
-                  }}
-                  disabled
-                >
-                  녹음 재개
-                </button>
-                <button
-                  className="btn bg-primary text-white hover:bg-opacity-70"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSave(new Blob(record));
-                  }}
-                >
-                  저장
-                </button>
-              </>
-            )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </section>
     </div>
   );

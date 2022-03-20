@@ -14,6 +14,8 @@ const assignmentTypeOptions: Option<AssignmentType>[] = [
   { label: "동시 통역", value: "SIMULTANEOUS" },
 ];
 
+type Field = Omit<CreateAssignmentDto, "audioFile" | "sequentialRegions">;
+
 function AssignmentForm() {
   const { classId, assignmentId } = useParams();
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ function AssignmentForm() {
     setValue,
     reset,
     formState: { isSubmitting, isSubmitted },
-  } = useForm<Omit<CreateAssignmentDto, "audioFile" | "sequentialRegions">>({
+  } = useForm<Field>({
     defaultValues: {
       classId: +classId!,
       assignmentType: "TRANSLATION",
@@ -32,6 +34,7 @@ function AssignmentForm() {
       dueDateTime: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0, -8),
+      textFile: "",
       playbackRate: 1.0,
       maxPlayCount: 0,
     },
@@ -42,34 +45,31 @@ function AssignmentForm() {
   const [sequentialRegions, setSequentialRegions] = useState<Region[]>([]);
 
   useEffect(() => {
-    if (assignmentId !== "new") {
-      (async function () {
-        const assignment = await assignmentService.getOne(+assignmentId!);
-        reset({
-          assignmentType: assignment.assignmentType,
-          audioFile: assignment.audioFile,
-          classId: assignment.classId,
-          description: assignment.description,
-          isPublic: assignment.isPublic,
-          keywords: assignment.keywords,
-          maxPlayCount: assignment.maxPlayCount,
-          name: assignment.name,
-          playbackRate: assignment.playbackRate,
-          sequentialRegions: assignment.sequentialRegions,
-          textFile: assignment.textFile,
-          weekNumber: assignment.weekNumber,
-          feedbackCategoryIds: assignment.feedbackCategories.map((f) => f.id),
-          dueDateTime: assignment.dueDateTime.slice(0, -8),
-        } as CreateAssignmentDto);
-        setSequentialRegions(assignment.sequentialRegions || []);
-        setAudioFile(assignment.audioFile);
-      })();
-    }
+    if (assignmentId === "new") return;
+
+    assignmentService
+      .getOne(+assignmentId!)
+      .then(
+        ({
+          id,
+          feedbackCategories,
+          dueDateTime,
+          audioFile,
+          sequentialRegions,
+          ...rest
+        }) => {
+          reset({
+            ...rest,
+            feedbackCategoryIds: feedbackCategories.map((f) => f.id),
+            dueDateTime: dueDateTime.slice(0, -8),
+          } as Field);
+          setSequentialRegions(sequentialRegions || []);
+          setAudioFile(audioFile);
+        }
+      );
   }, [assignmentId, reset]);
 
-  const onSubmit: SubmitHandler<
-    Omit<CreateAssignmentDto, "audioFile" | "sequentialRegions">
-  > = async (data) => {
+  const onSubmit: SubmitHandler<Field> = async (data) => {
     try {
       if (assignmentId === "new") {
         await assignmentService.postOne({
@@ -101,6 +101,7 @@ function AssignmentForm() {
     }
   };
 
+  console.log(sequentialRegions);
   return (
     <main className="grid grid-rows-[auto_minmax(0,100%)] overflow-auto p-4">
       <h2>{assignmentId === "new" ? "과제 추가" : "과제 수정"}</h2>
@@ -155,7 +156,8 @@ function AssignmentForm() {
             <>
               <Select
                 label="다시 듣기 제한"
-                {...register("maxPlayCount", { required: true })}
+                required
+                {...register("maxPlayCount")}
                 options={[{ label: "무제한", value: "0" }]}
               />
               <InputField
@@ -188,11 +190,9 @@ function AssignmentForm() {
         ) : watchAssignmentType === "SEQUENTIAL" ? (
           <SequentialForm
             audioFile={audioFile || new Blob([])}
-            handleAudioFileChange={(audioFile) => setAudioFile(audioFile)}
+            handleAudioFileChange={setAudioFile}
             sequentialRegions={sequentialRegions}
-            handleSequentialRegionsChange={(regions) =>
-              setSequentialRegions(regions)
-            }
+            handleSequentialRegionsChange={setSequentialRegions}
           />
         ) : null}
         <section className="col-span-full flex gap-2">
