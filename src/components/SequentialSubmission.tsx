@@ -87,7 +87,7 @@ function SequentialSubmission({
         내 음성
         <div ref={submissionSurfer.refCallback}></div>
       </label>
-      {submissionAudio && (
+      {submissionAudio.size > 0 && (
         <>
           {Object.values(
             submissionSurfer.surfer.current?.regions.list || []

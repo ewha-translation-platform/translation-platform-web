@@ -101,7 +101,6 @@ function AssignmentForm() {
     }
   };
 
-  console.log(sequentialRegions);
   return (
     <main className="grid grid-rows-[auto_minmax(0,100%)] overflow-auto p-4">
       <h2>{assignmentId === "new" ? "과제 추가" : "과제 수정"}</h2>
