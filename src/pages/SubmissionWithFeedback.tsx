@@ -2,9 +2,10 @@ import {
   FeedbackCard,
   FeedbackCategoryChart,
   Highlightable,
+  SurferPlayer,
 } from "@/components";
 import { UserContext } from "@/contexts";
-import type { Action } from "@/hooks";
+import { Action } from "@/hooks";
 import { useSubmissionReducer } from "@/hooks";
 import {
   feedbackCategoryService,
@@ -26,6 +27,8 @@ import { useParams } from "react-router-dom";
 import Switch from "react-switch";
 import { toast } from "react-toastify";
 import Loading from "./Loading";
+import WaveSurfer from "wavesurfer.js";
+import ReactSwitch from "react-switch";
 
 interface SubmissionWithFeedbackProps {
   submission: Submission;
@@ -36,6 +39,9 @@ function SubmissionWithFeedback({
   submission,
   dispatch,
 }: SubmissionWithFeedbackProps) {
+  const [isVolBig, setIsVolBig] = useState(false);
+  const assignmentSurfer = useRef<WaveSurfer>();
+  const submissionSurfer = useRef<WaveSurfer>();
   const { assignment, feedbacks } = submission;
   const { user } = useContext(UserContext);
   const feedbackListRef = useRef<HTMLUListElement>(null);
@@ -176,11 +182,24 @@ function SubmissionWithFeedback({
 
   return (
     <main className="grid grid-rows-[auto_minmax(0,100%)] gap-2 p-4">
-      <nav className="flex flex-wrap items-start gap-2">
+      <nav className="flex flex-wrap items-center gap-2">
         <h2>
           {submission.student.lastName}
           {submission.student.firstName} 학생의 과제
         </h2>
+        <button
+          type="button"
+          className="btn bg-primary py-1 text-white"
+          onClick={() => {
+            if (!assignmentSurfer.current || !submissionSurfer.current) return;
+            if (assignment.assignmentType === "SIMULTANEOUS")
+              assignmentSurfer.current.setVolume(0.2);
+            assignmentSurfer.current.play(0);
+            submissionSurfer.current.play(0);
+          }}
+        >
+          전체 듣기
+        </button>
         <label className="mr-auto flex items-center gap-2">
           <Switch
             checked={submission.graded}
@@ -226,29 +245,59 @@ function SubmissionWithFeedback({
       <section className="grid grid-cols-[1fr_22rem] grid-rows-[1fr_auto] gap-2">
         <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <article className="flex flex-col">
-            <h3>원문</h3>
-            {assignment.assignmentType !== "TRANSLATION" && (
-              <audio controls className="w-full"></audio>
-            )}
+            <h3 className="flex items-center justify-between gap-2">
+              원문
+              {assignment.assignmentType === "SIMULTANEOUS" && (
+                <label className="flex items-center gap-2 text-base font-normal">
+                  소리 크게
+                  <ReactSwitch
+                    checked={isVolBig}
+                    onChange={() => {
+                      assignmentSurfer.current?.setVolume(isVolBig ? 0.2 : 1);
+                      setIsVolBig(!isVolBig);
+                    }}
+                    checkedIcon={false}
+                    uncheckedIcon={false}
+                  />
+                </label>
+              )}
+            </h3>
+            {assignment.assignmentType !== "TRANSLATION" &&
+              assignment.audioFile && (
+                <SurferPlayer
+                  audioFile={assignment.audioFile}
+                  surferRef={assignmentSurfer}
+                  regions={assignment.sequentialRegions || []}
+                />
+              )}
             <Highlightable
               className="flex-grow"
               text={assignment.textFile}
               highlightedRegions={highlightedRegions.filter(
-                ({ selectedSourceText: selectedOrigin }) => selectedOrigin
+                ({ selectedSourceText }) => selectedSourceText
               )}
               onSelect={handleSelectFactory(true)}
             />
           </article>
           <article className="flex flex-col">
-            <h3>번역문</h3>
-            {assignment.assignmentType !== "TRANSLATION" && (
-              <audio controls className="w-full"></audio>
+            {assignment.assignmentType === "TRANSLATION" ? (
+              <h3>번역문</h3>
+            ) : (
+              <h3>통역 전사문</h3>
             )}
+            {assignment.assignmentType !== "TRANSLATION" &&
+              submission.audioFile && (
+                <SurferPlayer
+                  audioFile={submission.audioFile}
+                  surferRef={submissionSurfer}
+                  regions={submission.sequentialRegions || []}
+                />
+              )}
             <Highlightable
               className="flex-grow"
               text={submission.textFile}
               highlightedRegions={highlightedRegions.filter(
-                ({ selectedSourceText: selectedOrigin }) => !selectedOrigin
+                ({ selectedSourceText }) => !selectedSourceText
               )}
               onSelect={handleSelectFactory(false)}
             />

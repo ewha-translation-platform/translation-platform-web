@@ -3,7 +3,6 @@ import { colorScheme } from "@/utils";
 import getBlobDuration from "get-blob-duration";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import MinimapPlugin from "wavesurfer.js/src/plugin/minimap";
 import RegionsPlugin from "wavesurfer.js/src/plugin/regions";
 import RecorderModal from "./RecorderModal";
 
@@ -37,8 +36,6 @@ function SequentialForm({
       });
     },
     interact: true,
-    normalize: true,
-    scrollParent: true,
     plugins: [
       RegionsPlugin.create({
         dragSelection: true,
@@ -49,7 +46,6 @@ function SequentialForm({
           end: end / 1000,
         })),
       }),
-      MinimapPlugin.create({}),
     ],
   });
 
@@ -66,53 +62,59 @@ function SequentialForm({
   return (
     <>
       <section className="flex flex-col gap-2">
-        <span>
-          원음:
-          {duration && (
+        {audioFile.size > 0 ? (
+          <>
             <span>
-              {Math.floor(duration / 60)}분 {Math.round(duration % 60)}초
+              원음:
+              {duration && (
+                <span>
+                  {Math.floor(duration / 60)}분 {Math.round(duration % 60)}초
+                </span>
+              )}
             </span>
-          )}
-        </span>
-        <div ref={waveSurfer.refCallback}></div>
-        {waveSurfer.surfer.current?.isReady ? (
-          <section className="flex gap-2">
-            <section className="flex gap-1">
-              {Object.values(waveSurfer.surfer.current.regions.list).map(
-                (r, idx) => (
+            <div ref={waveSurfer.refCallback}></div>
+            {waveSurfer.surfer.current?.isReady ? (
+              <section className="flex gap-2">
+                <section className="flex gap-1">
+                  {Object.values(waveSurfer.surfer.current.regions.list).map(
+                    (r, idx) => (
+                      <button
+                        type="button"
+                        className="btn-sm text-white"
+                        key={r.id}
+                        style={{ backgroundColor: colorScheme(idx) }}
+                        onClick={() => r.play()}
+                      >
+                        구간{idx + 1}
+                      </button>
+                    )
+                  )}
                   <button
                     type="button"
-                    className="btn-sm text-white"
-                    key={r.id}
-                    style={{ backgroundColor: colorScheme(idx) }}
-                    onClick={() => r.play()}
+                    className="btn-sm bg-danger text-white"
+                    onClick={() => {
+                      if (!window.confirm("구간을 전부 삭제합니다.")) return;
+                      waveSurfer.surfer.current?.regions.clear();
+                      handleSequentialRegionsChange([]);
+                    }}
                   >
-                    구간{idx + 1}
+                    전체 삭제
                   </button>
-                )
-              )}
-              <button
-                type="button"
-                className="btn-sm bg-danger text-white"
-                onClick={() => {
-                  if (!window.confirm("구간을 전부 삭제합니다.")) return;
-                  waveSurfer.surfer.current?.regions.clear();
-                  handleSequentialRegionsChange([]);
-                }}
-              >
-                전체 삭제
-              </button>
-            </section>
-            <button
-              type="button"
-              className="btn mr-auto bg-primary text-white"
-              onClick={() => waveSurfer.surfer.current?.playPause()}
-            >
-              재생 / 일시정지
-            </button>
-          </section>
+                </section>
+                <button
+                  type="button"
+                  className="btn mr-auto bg-primary text-white"
+                  onClick={() => waveSurfer.surfer.current?.playPause()}
+                >
+                  재생 / 일시정지
+                </button>
+              </section>
+            ) : (
+              <div>Loading...</div>
+            )}
+          </>
         ) : (
-          <div>Loading...</div>
+          <div className="text-center">음성 파일이 없습니다.</div>
         )}
         <section className="flex gap-2">
           <input
