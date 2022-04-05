@@ -183,7 +183,7 @@ function ClassForm() {
           }))}
         />
         <button
-          className="border-primary bg-primary self-end rounded-md border py-2 px-4 text-white hover:opacity-70 disabled:hover:opacity-30"
+          className="self-end rounded-md border border-primary bg-primary py-2 px-4 text-white hover:opacity-70 disabled:hover:opacity-30"
           disabled={!department}
           onClick={() => setCourseModalVisible(true)}
         >
@@ -213,7 +213,12 @@ function ClassForm() {
               value: p.academicId,
               label: `${p.department} ${p.lastName}${p.firstName}`,
             }))}
-          onChange={(value) => console.log(value)}
+          onChange={(value) =>
+            setValue(
+              "professorIds",
+              value.map((v) => v.value)
+            )
+          }
           placeholder="담당교수를 선택하세요"
         />
       </section>

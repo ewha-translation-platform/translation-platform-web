@@ -2,10 +2,10 @@ import {
   FeedbackCard,
   FeedbackCategoryChart,
   Highlightable,
+  SurferPlayer,
 } from "@/components";
 import { UserContext } from "@/contexts";
-import type { Action } from "@/hooks";
-import { useSubmissionReducer } from "@/hooks";
+import { Action, useSubmissionReducer } from "@/hooks";
 import {
   feedbackCategoryService,
   feedbackService,
@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import Switch from "react-switch";
 import { toast } from "react-toastify";
+import WaveSurfer from "wavesurfer.js";
 import Loading from "./Loading";
 
 interface SubmissionWithFeedbackProps {
@@ -36,6 +37,9 @@ function SubmissionWithFeedback({
   submission,
   dispatch,
 }: SubmissionWithFeedbackProps) {
+  const [loadingSTT, setLoadingSTT] = useState(false);
+  const assignmentSurfer = useRef<WaveSurfer>();
+  const submissionSurfer = useRef<WaveSurfer>();
   const { assignment, feedbacks } = submission;
   const { user } = useContext(UserContext);
   const feedbackListRef = useRef<HTMLUListElement>(null);
@@ -51,18 +55,13 @@ function SubmissionWithFeedback({
 
   const getColorByCategories = useCallback(
     (categories: FeedbackCategory[]) => {
-      switch (categories.length) {
-        case 0:
-          return colorScheme("default");
-        case 1:
-          return colorScheme(
-            assignment.feedbackCategories.findIndex(
-              (c) => c.id === categories[0].id
-            )
-          );
-        default:
-          return colorScheme("danger");
-      }
+      if (categories.length === 0) return colorScheme("default");
+      if (categories.length >= 2) return colorScheme("danger");
+      return colorScheme(
+        assignment.feedbackCategories.findIndex(
+          (c) => c.id === categories[0].id
+        )
+      );
     },
     [assignment]
   );
@@ -90,7 +89,7 @@ function SubmissionWithFeedback({
           .filter((f) => f.selectedSourceText === selectedSourceText)
           .find(({ selectedIdx: { start: s, end: e } }) => s < end && start < e)
       ) {
-        toast.warn("중복된 영억을 선택할 수 없습니다.");
+        toast.warn("중복된 영역을 선택할 수 없습니다.");
         return;
       }
 
@@ -164,6 +163,10 @@ function SubmissionWithFeedback({
       const newCategory = await feedbackCategoryService.postOne({
         name,
         assignmentId: assignment.id,
+        feedbackCategoryType:
+          assignment.assignmentType === "TRANSLATION"
+            ? "TRANSLATION"
+            : "INTERPRETATION",
       });
       dispatch({ type: "ADD_CATEGORY", payload: newCategory });
       toast.success(`"${name}" 카테고리가 추가되었습니다.`);
@@ -174,13 +177,68 @@ function SubmissionWithFeedback({
     }
   }
 
+  const timestampLookup = [
+    ...Array.from(submission.textFile.matchAll(/\n/g)).map((x) => x.index!),
+    submission.textFile.length,
+  ].reduce<{ start: number; end: number }[]>(
+    (acc, val, idx, arr) => [
+      ...acc,
+      {
+        start: idx === 0 ? 0 : arr[idx - 1] + 1,
+        end: val,
+      },
+    ],
+    []
+  );
+
   return (
     <main className="grid grid-rows-[auto_minmax(0,100%)] gap-2 p-4">
-      <nav className="flex flex-wrap items-start gap-2">
+      <nav className="flex flex-wrap items-center gap-2">
         <h2>
           {submission.student.lastName}
           {submission.student.firstName} 학생의 과제
         </h2>
+        {assignment.assignmentType !== "TRANSLATION" && (
+          <>
+            <button
+              type="button"
+              className="btn-sm bg-primary py-1 text-white hover:opacity-70"
+              onClick={() => {
+                if (
+                  !window.confirm(
+                    "피드백을 삭제하고 통역 전사문과 기계 피드백을 로드합니다."
+                  )
+                )
+                  return;
+                setLoadingSTT(true);
+                submissionService
+                  .stt(submission.id)
+                  .then((submission) => {
+                    dispatch({ type: "SET", payload: submission });
+                    setLoadingSTT(false);
+                    globalThis.location.reload();
+                  })
+                  .catch((e) => toast.error(e.message))
+                  .finally(() => setLoadingSTT(false));
+              }}
+              disabled={loadingSTT}
+            >
+              기계 피드백 불러오기
+            </button>
+            <button
+              type="button"
+              className="btn-sm bg-orange-400 text-white hover:opacity-70"
+              onClick={() => {
+                if (assignmentSurfer.current && submissionSurfer.current) {
+                  assignmentSurfer.current.playPause();
+                  submissionSurfer.current.playPause();
+                }
+              }}
+            >
+              동시재생/일시정지
+            </button>
+          </>
+        )}
         <label className="mr-auto flex items-center gap-2">
           <Switch
             checked={submission.graded}
@@ -208,47 +266,68 @@ function SubmissionWithFeedback({
         <button className="btn bg-primary text-white" disabled>
           다음 학생
         </button>
-        <button
-          className="btn bg-primary text-white hover:opacity-80"
-          onClick={async (e) => {
-            e.preventDefault();
-            try {
-              await submissionService.stage(submission.id);
-              toast.success("피드백을 학생에게 공개합니다.");
-            } catch (error) {
-              if (error instanceof Error) toast.error(error.message);
-            }
-          }}
-        >
-          저장
-        </button>
       </nav>
       <section className="grid grid-cols-[1fr_22rem] grid-rows-[1fr_auto] gap-2">
-        <section className="grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
+        <section className="relative grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
+          {loadingSTT && (
+            <div className="absolute top-1/2 left-1/2 z-10 box-content grid h-full w-full -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md bg-black p-1 opacity-60">
+              <div className="flex flex-col items-center gap-2">
+                <div className="h-4 w-4 animate-ping rounded-full bg-white"></div>
+                <div className="text-2xl text-white">
+                  통역 전사문을 불러오는 중입니다.
+                </div>
+              </div>
+            </div>
+          )}
           <article className="flex flex-col">
-            <h3>원문</h3>
-            {assignment.assignmentType !== "TRANSLATION" && (
-              <audio controls className="w-full"></audio>
-            )}
+            <h3 className="flex items-center justify-between gap-2">원문</h3>
+            {assignment.assignmentType !== "TRANSLATION" &&
+              assignment.audioFile && (
+                <SurferPlayer
+                  audioFile={assignment.audioFile}
+                  surferRef={assignmentSurfer}
+                  regions={assignment.sequentialRegions || []}
+                />
+              )}
             <Highlightable
               className="flex-grow"
               text={assignment.textFile}
               highlightedRegions={highlightedRegions.filter(
-                ({ selectedSourceText: selectedOrigin }) => selectedOrigin
+                ({ selectedSourceText }) => selectedSourceText
               )}
               onSelect={handleSelectFactory(true)}
             />
           </article>
           <article className="flex flex-col">
-            <h3>번역문</h3>
-            {assignment.assignmentType !== "TRANSLATION" && (
-              <audio controls className="w-full"></audio>
+            {assignment.assignmentType === "TRANSLATION" ? (
+              <h3>번역문</h3>
+            ) : (
+              <h3>통역 전사문</h3>
             )}
+            {assignment.assignmentType !== "TRANSLATION" &&
+              submission.audioFile && (
+                <SurferPlayer
+                  audioFile={submission.audioFile}
+                  surferRef={submissionSurfer}
+                  regions={submission.timestamps || []}
+                  onCreate={(w) => {
+                    w.on("region-in", (obj) =>
+                      setHighlightedRegions([
+                        {
+                          ...timestampLookup[+obj.id],
+                          selectedSourceText: false,
+                          color: colorScheme("default"),
+                        },
+                      ])
+                    );
+                  }}
+                />
+              )}
             <Highlightable
               className="flex-grow"
               text={submission.textFile}
               highlightedRegions={highlightedRegions.filter(
-                ({ selectedSourceText: selectedOrigin }) => !selectedOrigin
+                ({ selectedSourceText }) => !selectedSourceText
               )}
               onSelect={handleSelectFactory(false)}
             />
@@ -335,6 +414,7 @@ export default function AJAXWrapper() {
 
   useEffect(() => {
     submissionService.getOne(+submissionId!).then((res) => {
+      res.assignment.feedbackCategories.sort((a, b) => a.id - b.id);
       dispatch({ type: "SET", payload: res });
     });
   }, [submissionId, dispatch]);

@@ -21,14 +21,15 @@ function SimultaneousSubmission({
   const assignmentSurfer = useWaveSurfer({
     audioFile,
     onCreate: (w) => w.on("load", forceUpdate),
+    interact: false,
   });
   const submissionSurfer = useWaveSurfer({
     audioFile: submissionAudio,
     onCreate: (w) => w.on("load", forceUpdate),
+    interact: false,
   });
 
-  const handleStart: MouseEventHandler = async (e) => {
-    e.preventDefault();
+  const handleStart: MouseEventHandler = async () => {
     if (!assignmentSurfer.surfer.current) return;
     await recorder.ready();
     recorder.start();
@@ -36,8 +37,7 @@ function SimultaneousSubmission({
     stopWatch.start();
   };
 
-  const handleDone: MouseEventHandler = (e) => {
-    e.preventDefault();
+  const handleDone: MouseEventHandler = () => {
     recorder.stop();
     assignmentSurfer.surfer.current?.stop();
     stopWatch.pause();
@@ -60,11 +60,19 @@ function SimultaneousSubmission({
         </div>
         {!done &&
           (!recorder.isRecording ? (
-            <button className="btn bg-red-500 text-white" onClick={handleStart}>
+            <button
+              type="button"
+              className="btn bg-red-500 text-white"
+              onClick={handleStart}
+            >
               통역 시작
             </button>
           ) : (
-            <button className="btn bg-primary text-white" onClick={handleDone}>
+            <button
+              type="button"
+              className="btn bg-primary text-white"
+              onClick={handleDone}
+            >
               종료
             </button>
           ))}
@@ -74,6 +82,16 @@ function SimultaneousSubmission({
           </button>
         )}
       </section>
+      <label className="flex items-center gap-4">
+        개발용:
+        <input
+          type="file"
+          onChange={(e) => {
+            if (e.target.files) handleSubmssionAudioChange(e.target.files[0]);
+          }}
+          accept="audio/*"
+        />
+      </label>
     </>
   );
 }

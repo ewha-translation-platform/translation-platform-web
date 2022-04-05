@@ -7,6 +7,10 @@ function useRecorder(handleSave: (data: Blob, regions: Region[]) => void) {
   const startedTime = useRef(0);
   const [isRecording, setIsRecording] = useState(false);
 
+  function cleanup() {
+    recorder.current?.stream.getTracks().forEach((s) => s.stop());
+  }
+
   async function ready(): Promise<boolean> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -37,7 +41,7 @@ function useRecorder(handleSave: (data: Blob, regions: Region[]) => void) {
           )
         );
         records.current = [];
-        recorder.current?.stream.getTracks().forEach((s) => s.stop());
+        cleanup();
       };
 
       return true;
@@ -86,6 +90,7 @@ function useRecorder(handleSave: (data: Blob, regions: Region[]) => void) {
     stop,
     pause,
     isRecording,
+    cleanup,
   };
 }
 

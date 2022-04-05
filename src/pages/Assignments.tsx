@@ -3,6 +3,7 @@ import { AssignmentCard, NewItemCard } from "../components";
 import { UserContext } from "@/contexts";
 import { assignmentService, classService } from "@/services";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Assignments() {
   const currentWeek = 0;
@@ -18,8 +19,15 @@ function Assignments() {
   }, [classId]);
 
   function handleDelete(targetId: number) {
-    setAssignments(assignments.filter(({ id }) => id !== targetId));
-    assignmentService.deleteOne(targetId);
+    const olds = assignments;
+    setAssignments(assignments.filter((item) => item.id !== targetId));
+    assignmentService
+      .deleteOne(targetId)
+      .then(() => toast.success("삭제되었습니다."))
+      .catch(() => {
+        toast.error("실패했습니다.");
+        setAssignments(olds);
+      });
   }
 
   return (

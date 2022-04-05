@@ -3,6 +3,7 @@ interface Option<V extends string | number = string | number> {
   value: V;
 }
 
+type FeedbackCategoryType = "TRANSLATION" | "INTERPRETATION" | "COMMON";
 type AssignmentType = "TRANSLATION" | "SIMULTANEOUS" | "SEQUENTIAL";
 type Semester = "SPRING" | "SUMMER" | "FALL" | "WINTER";
 type Role = "PROFESSOR" | "ASSISTANT" | "STUDENT";
@@ -107,7 +108,6 @@ interface CreateAssignmentDto {
   dueDateTime: string;
   assignmentType: AssignmentType;
   isPublic: boolean;
-  feedbackCategoryIds: number[];
   textFile: string;
 
   audioFile: Blob | null;
@@ -115,7 +115,11 @@ interface CreateAssignmentDto {
   maxPlayCount: number | null;
   playbackRate: number | null;
 }
-type UpdateAssignmentDto = Partial<CreateAssignmentDto>;
+type UpdateAssignmentDto = Partial<
+  CreateAssignmentDto & {
+    feedbackCategoryIds: number[];
+  }
+>;
 
 interface Submission {
   id: number;
@@ -129,6 +133,7 @@ interface Submission {
   openedToStudent: boolean;
 
   audioFile: Blob | null;
+  timestamps: { start: number; end: number }[] | null;
   sequentialRegions: Region[] | null;
   playCount: number | null;
   playbackRate: number | null;
@@ -171,10 +176,13 @@ interface SubmissionStatus {
 interface FeedbackCategory {
   id: number;
   name: string;
+  isPrimary: boolean;
+  feedbackCategoryType: FeedbackCategoryType;
 }
 interface CreateFeedbackCategoryDto {
   name: string;
   assignmentId: number;
+  feedbackCategoryType: FeedbackCategoryType;
 }
 interface UpdateFeedbackCategoryDto {
   name: string;

@@ -16,12 +16,21 @@ const submissionService = {
     if (submission.assignment.assignmentType === "TRANSLATION")
       return { ...submission, audioFile: null };
 
-    const audioFile = await httpService
-      .get<Blob>(`submissions/${id}/audio`, { responseType: "blob" })
-      .then(({ data }) => data)
-      .catch(() => null);
+    const { data: audioFile } = await httpService.get<Blob>(
+      `assignments/${submission.assignment.id}/audio`,
+      { responseType: "blob" }
+    );
 
-    return { ...submission, audioFile };
+    const { data: submissionAudio } = await httpService.get<Blob>(
+      `submissions/${id}/audio`,
+      { responseType: "blob" }
+    );
+
+    return {
+      ...submission,
+      assignment: { ...submission.assignment, audioFile },
+      audioFile: submissionAudio,
+    };
   },
 
   async postOne({ audioFile, ...createSubmissionDto }: CreateSubmissionDto) {
@@ -80,6 +89,13 @@ const submissionService = {
 
   async stage(id: number) {
     await httpService.post(`submissions/${id}/stage`);
+  },
+
+  async stt(id: number) {
+    const { data: submission } = await httpService.post<Submission>(
+      `submissions/${id}/stt`
+    );
+    return submission;
   },
 };
 
