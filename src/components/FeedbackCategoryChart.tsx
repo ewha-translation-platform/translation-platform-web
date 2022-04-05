@@ -18,7 +18,10 @@ function FeedbackCategoryChart({
     datasets: [
       {
         data: Object.values(data),
-        backgroundColor: categories.map((_, idx) => colorScheme(idx)),
+        backgroundColor: categories
+          .map(({ id }, idx) => ({ id, idx }))
+          .filter((c) => Object.keys(data).some((id) => +id === c.id))
+          .map(({ idx }) => colorScheme(idx)),
       },
     ],
   };

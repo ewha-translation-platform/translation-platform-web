@@ -63,7 +63,7 @@ function FeedbackCard({
     >
       <section style={{ backgroundColor }} className="flex justify-end">
         <button
-          className="bg-danger h-6 w-6 rounded-bl-md p-1 text-white hover:bg-red-500"
+          className="h-6 w-6 rounded-bl-md bg-danger p-1 text-white hover:bg-red-500"
           onClick={(e) => {
             e.stopPropagation();
             handleDelete(feedback.id);
@@ -100,6 +100,7 @@ function FeedbackCard({
           placeholder="카테고리를 선택하세요"
           isMulti
           isSearchable
+          maxMenuHeight={200}
         />
         <form className="flex flex-col gap-1" onSubmit={handleSubmit(onSubmit)}>
           <TextArea
@@ -116,7 +117,7 @@ function FeedbackCard({
               </span>
               <button
                 type="submit"
-                className="btn-sm bg-primary rounded-md text-white"
+                className="btn-sm rounded-md bg-primary text-white"
                 disabled={isSubmitting}
               >
                 저장

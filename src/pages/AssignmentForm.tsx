@@ -25,7 +25,7 @@ function AssignmentForm() {
     watch,
     setValue,
     reset,
-    formState: { isSubmitting, isSubmitted },
+    formState: { isSubmitting, isSubmitSuccessful },
   } = useForm<Field>({
     defaultValues: {
       classId: +classId!,
@@ -81,7 +81,6 @@ function AssignmentForm() {
           audioFile,
           weekNumber: +data.weekNumber,
           sequentialRegions,
-          feedbackCategoryIds: [],
         });
       } else {
         await assignmentService.patchOne(+assignmentId!, {
@@ -210,7 +209,7 @@ function AssignmentForm() {
             type="submit"
             value="확인"
             className="btn justify-self-end bg-primary text-white hover:opacity-70"
-            disabled={isSubmitting || isSubmitted}
+            disabled={isSubmitting || isSubmitSuccessful}
           />
         </section>
       </form>

@@ -33,7 +33,11 @@ function Highlightable({
             style={{ backgroundColor, color: "transparent" }}
             ref={i === 0 ? markRef : null}
           >
-            {text.slice(start, end)}
+            {(() => {
+              const slice = text.slice(start, end);
+              if (slice === "\n") return " \n";
+              return slice;
+            })()}
           </mark>
         );
       }
@@ -65,7 +69,7 @@ function Highlightable({
     <div className={`relative ${className}`} {...props}>
       <div className="absolute h-full w-full rounded-md border bg-white text-transparent">
         <div
-          className="pointer-events-none h-full w-full overflow-auto whitespace-pre-wrap break-words p-2"
+          className="pointer-events-none h-full w-full overflow-auto  whitespace-pre-wrap break-words p-2"
           ref={highlightDivRef}
         >
           {highlightedText}

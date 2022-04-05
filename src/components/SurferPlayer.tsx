@@ -8,14 +8,21 @@ interface SurferPlayerProps {
   audioFile: Blob;
   surferRef?: MutableRefObject<WaveSurfer | undefined>;
   regions?: Region[];
+  onCreate?: (w: WaveSurfer) => void;
 }
 
-function SurferPlayer({ audioFile, surferRef, regions }: SurferPlayerProps) {
+function SurferPlayer({
+  audioFile,
+  surferRef,
+  regions,
+  onCreate,
+}: SurferPlayerProps) {
   const forceUpdate = useForceUpdate();
   const waveSurfer = useWaveSurfer({
     audioFile,
     onCreate: (w) => {
       w.on("ready", forceUpdate);
+      onCreate && onCreate(w);
       if (surferRef) surferRef.current = w;
     },
     plugins: [
@@ -40,8 +47,18 @@ function SurferPlayer({ audioFile, surferRef, regions }: SurferPlayerProps) {
           ref={waveSurfer.refCallback}
           className="max-h-full flex-grow"
         ></div>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          onChange={(e) =>
+            waveSurfer.surfer.current?.setVolume(+e.target.value)
+          }
+          defaultValue={0.5}
+        />
       </div>
-      <div className="flex gap-1 p-1">
+      {/* <div className="flex gap-1 p-1">
         {regions &&
           Object.values(waveSurfer.surfer.current?.regions.list || []).map(
             (r, idx) => (
@@ -56,7 +73,7 @@ function SurferPlayer({ audioFile, surferRef, regions }: SurferPlayerProps) {
               </button>
             )
           )}
-      </div>
+      </div> */}
     </>
   );
 }

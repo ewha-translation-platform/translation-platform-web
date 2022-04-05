@@ -90,6 +90,13 @@ const submissionService = {
   async stage(id: number) {
     await httpService.post(`submissions/${id}/stage`);
   },
+
+  async stt(id: number) {
+    const { data: submission } = await httpService.post<Submission>(
+      `submissions/${id}/stt`
+    );
+    return submission;
+  },
 };
 
 export default submissionService;
