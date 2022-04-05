@@ -6,6 +6,7 @@ import { semesterOptions, yearOptions } from "@/utils";
 import { UserContext } from "@/contexts";
 import { useSearch } from "@/hooks";
 import { classService } from "@/services";
+import { toast } from "react-toastify";
 
 type FilterFields = {
   year: number | "";
@@ -43,7 +44,13 @@ function Classes() {
     if (window.confirm("정말 삭제하시겠습니까?")) {
       const olds = classes;
       setClasses(classes.filter((item) => item.id !== targetId));
-      classService.deleteOne(targetId).catch(() => setClasses(olds));
+      classService
+        .deleteOne(targetId)
+        .then(() => toast.success("삭제되었습니다."))
+        .catch(() => {
+          toast.error("실패했습니다.");
+          setClasses(olds);
+        });
     }
   }
 
