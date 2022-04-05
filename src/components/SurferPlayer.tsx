@@ -1,5 +1,4 @@
 import { useForceUpdate, useWaveSurfer } from "@/hooks";
-import { colorScheme } from "@/utils";
 import { MutableRefObject } from "react";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/src/plugin/regions";
