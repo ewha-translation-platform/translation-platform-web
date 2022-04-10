@@ -2,8 +2,9 @@ import { Checkbox, InputField, Select, TextArea } from "@/components/common";
 import SequentialForm from "@/components/SequentialForm";
 import SimultaneousForm from "@/components/SimultaneousForm";
 import TranslationForm from "@/components/TranslationForm";
-import { assignmentService } from "@/services";
-import { useEffect, useState } from "react";
+import { UserContext } from "@/contexts";
+import { assignmentService, submissionService } from "@/services";
+import { useContext, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -12,11 +13,13 @@ const assignmentTypeOptions: Option<AssignmentType>[] = [
   { label: "번역", value: "TRANSLATION" },
   { label: "순차 통역", value: "SEQUENTIAL" },
   { label: "동시 통역", value: "SIMULTANEOUS" },
+  { label: "자료 수집", value: "DEVELOPMENT" },
 ];
 
 type Field = Omit<CreateAssignmentDto, "audioFile" | "sequentialRegions">;
 
 function AssignmentForm() {
+  const { user } = useContext(UserContext);
   const { classId, assignmentId } = useParams();
   const navigate = useNavigate();
   const {
@@ -72,16 +75,43 @@ function AssignmentForm() {
   const onSubmit: SubmitHandler<Field> = async (data) => {
     try {
       if (assignmentId === "new") {
-        await assignmentService.postOne({
-          ...data,
-          dueDateTime: new Date(
-            Date.parse(data.dueDateTime) +
-              new Date().getTimezoneOffset() * 60000
-          ).toISOString(),
-          audioFile,
-          weekNumber: +data.weekNumber,
-          sequentialRegions,
-        });
+        if (data.assignmentType === "DEVELOPMENT") {
+          const assignment = await assignmentService.postOne({
+            ...data,
+            assignmentType: "SIMULTANEOUS",
+            dueDateTime: new Date(
+              Date.parse(data.dueDateTime) +
+                new Date().getTimezoneOffset() * 60000
+            ).toISOString(),
+            audioFile: new Blob([]),
+            weekNumber: +data.weekNumber,
+            sequentialRegions,
+          });
+          const submission = await submissionService
+            .postOne({
+              assignmentId: assignment.id,
+              audioFile,
+              playCount: null,
+              playbackRate: null,
+              sequentialRegions: [],
+              staged: false,
+              studentId: user!.id,
+              textFile: "",
+            })
+            .catch(() => assignmentService.deleteOne(assignment.id));
+          await submissionService.stage(submission.id);
+        } else {
+          await assignmentService.postOne({
+            ...data,
+            dueDateTime: new Date(
+              Date.parse(data.dueDateTime) +
+                new Date().getTimezoneOffset() * 60000
+            ).toISOString(),
+            audioFile,
+            weekNumber: +data.weekNumber,
+            sequentialRegions,
+          });
+        }
       } else {
         await assignmentService.patchOne(+assignmentId!, {
           ...data,
@@ -191,6 +221,11 @@ function AssignmentForm() {
             handleAudioFileChange={setAudioFile}
             sequentialRegions={sequentialRegions}
             handleSequentialRegionsChange={setSequentialRegions}
+          />
+        ) : watchAssignmentType === "DEVELOPMENT" ? (
+          <SimultaneousForm
+            audioFile={audioFile || new Blob([])}
+            handleAudioFileChange={(audioFile) => setAudioFile(audioFile)}
           />
         ) : null}
         <section className="col-span-full flex gap-2">

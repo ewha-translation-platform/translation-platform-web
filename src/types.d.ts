@@ -4,7 +4,12 @@ interface Option<V extends string | number = string | number> {
 }
 
 type FeedbackCategoryType = "TRANSLATION" | "INTERPRETATION" | "COMMON";
-type AssignmentType = "TRANSLATION" | "SIMULTANEOUS" | "SEQUENTIAL";
+type AssignmentType =
+  | "TRANSLATION"
+  | "SIMULTANEOUS"
+  | "SEQUENTIAL"
+  | "DEVELOPMENT"
+  | "SELFSTUDY";
 type Semester = "SPRING" | "SUMMER" | "FALL" | "WINTER";
 type Role = "PROFESSOR" | "ASSISTANT" | "STUDENT";
 
@@ -76,8 +81,7 @@ interface Class {
 interface CreateClassDto {
   courseId: number;
   classNumber: number;
-  studentIds: string[];
-  professorIds: string[];
+  professorIds: number[];
 }
 type UpdateClassDto = Partial<CreateClassDto>;
 
@@ -139,7 +143,7 @@ interface Submission {
   playbackRate: number | null;
 }
 interface CreateSubmissionDto {
-  studentId: string;
+  studentId: number;
   assignmentId: number;
   textFile: string;
   staged: boolean;
@@ -163,7 +167,7 @@ type UpdateSubmissionDto = Partial<{
   playbackRate: number | null;
 }>;
 interface SubmissionStatus {
-  studentId: string;
+  studentId: number;
   submissionId: number | null;
   firstName: string;
   lastName: string;
@@ -199,7 +203,7 @@ interface Feedback {
 }
 interface CreateFeedbackDto {
   submissionId: number;
-  professorId: string;
+  professorId: number;
   selectedIdx: Region;
   selectedSourceText: boolean;
   comment: string | null;

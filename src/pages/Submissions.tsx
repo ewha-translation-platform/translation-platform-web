@@ -12,7 +12,7 @@ function Submissions() {
   const [submissionStatuses, setSubmissionStatuses] = useState<
     SubmissionStatus[]
   >([]);
-  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [openAll, setOpenAll] = useState(false);
 
   useEffect(() => {
@@ -121,7 +121,7 @@ function Submissions() {
                 ) : (
                   <div className="flex items-center justify-between">
                     미완료
-                    <XIcon className="stroke-danger h-8 w-8" />
+                    <XIcon className="h-8 w-8 stroke-danger" />
                   </div>
                 ),
               (row) => (

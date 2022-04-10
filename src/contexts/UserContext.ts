@@ -1,7 +1,7 @@
 import { createContext, Dispatch, SetStateAction } from "react";
 
 interface GlobalUser {
-  id: string;
+  id: number;
   role: Role;
   isAdmin: boolean;
   firstName: string;

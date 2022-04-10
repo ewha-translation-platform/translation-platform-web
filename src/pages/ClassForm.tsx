@@ -53,7 +53,10 @@ function ClassForm() {
     watch,
     formState: { isSubmitting },
   } = useForm<CreateClassDto>({
-    defaultValues: { classNumber: 1, professorIds: [user!.id], studentIds: [] },
+    defaultValues: {
+      classNumber: 1,
+      professorIds: [user!.id],
+    },
   });
   const watchProfessorIds = watch("professorIds");
 
@@ -199,18 +202,18 @@ function ClassForm() {
             label: `${idx + 1}분반`,
           }))}
         />
-        <MultiSelect<Option<string>>
+        <MultiSelect<Option<number>>
           label="담당교수"
           className="col-span-full"
           isSearchable
           options={professors.map((p) => ({
-            value: p.academicId,
+            value: p.id,
             label: `${p.department} ${p.lastName}${p.firstName}`,
           }))}
           value={professors
-            .filter((p) => watchProfessorIds?.includes(p.academicId))
+            .filter((p) => watchProfessorIds?.includes(p.id))
             .map((p) => ({
-              value: p.academicId,
+              value: p.id,
               label: `${p.department} ${p.lastName}${p.firstName}`,
             }))}
           onChange={(value) =>
@@ -219,6 +222,7 @@ function ClassForm() {
               value.map((v) => v.value)
             )
           }
+          isDisabled
           placeholder="담당교수를 선택하세요"
         />
       </section>
@@ -283,10 +287,10 @@ function ClassForm() {
         isAdmin: false,
       }));
       setStudents(students);
-      setValue(
-        "studentIds",
-        students.map((s) => s.academicId)
-      );
+      // setValue(
+      //   "studentIds",
+      //   students.map((s) => s.academicId)
+      // );
     }
     if (!e.target.files) return;
     const file = e.target.files[0];
