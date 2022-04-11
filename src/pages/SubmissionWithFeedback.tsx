@@ -267,45 +267,18 @@ function SubmissionWithFeedback({
           다음 학생
         </button>
       </nav>
-      <section className="grid grid-cols-[1fr_22rem] grid-rows-[1fr_auto] gap-2">
-        <section className="relative grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
-          {loadingSTT && (
-            <div className="absolute top-1/2 left-1/2 z-10 box-content grid h-full w-full -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md bg-black p-1 opacity-60">
-              <div className="flex flex-col items-center gap-2">
-                <div className="h-4 w-4 animate-ping rounded-full bg-white"></div>
-                <div className="text-2xl text-white">
-                  통역 전사문을 불러오는 중입니다.
-                </div>
-              </div>
-            </div>
-          )}
-          <article className="flex flex-col">
-            <h3 className="flex items-center justify-between gap-2">원문</h3>
-            {assignment.assignmentType !== "TRANSLATION" &&
-              assignment.audioFile && (
+      <div className="grid grid-cols-[1fr_22rem] grid-rows-[1fr_auto] gap-2">
+        <div className="row-span-full flex flex-col">
+          {assignment.assignmentType !== "TRANSLATION" && (
+            <section aria-label="audio-files">
+              {assignment.audioFile && (
                 <SurferPlayer
                   audioFile={assignment.audioFile}
                   surferRef={assignmentSurfer}
                   regions={assignment.sequentialRegions || []}
                 />
               )}
-            <Highlightable
-              className="flex-grow"
-              text={assignment.textFile}
-              highlightedRegions={highlightedRegions.filter(
-                ({ selectedSourceText }) => selectedSourceText
-              )}
-              onSelect={handleSelectFactory(true)}
-            />
-          </article>
-          <article className="flex flex-col">
-            {assignment.assignmentType === "TRANSLATION" ? (
-              <h3>번역문</h3>
-            ) : (
-              <h3>통역 전사문</h3>
-            )}
-            {assignment.assignmentType !== "TRANSLATION" &&
-              submission.audioFile && (
+              {submission.audioFile && (
                 <SurferPlayer
                   audioFile={submission.audioFile}
                   surferRef={submissionSurfer}
@@ -320,25 +293,94 @@ function SubmissionWithFeedback({
                         },
                       ])
                     );
+                    w.on("seek", (progress) => {
+                      assignmentSurfer.current?.seekTo(progress);
+                    });
                   }}
                 />
               )}
-            <Highlightable
-              className="flex-grow"
-              text={submission.textFile}
-              highlightedRegions={highlightedRegions.filter(
-                ({ selectedSourceText }) => !selectedSourceText
+            </section>
+          )}
+          <section className="relative grid flex-grow grid-cols-2 gap-2">
+            {loadingSTT && (
+              <div className="absolute top-1/2 left-1/2 z-10 box-content grid h-full w-full -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md bg-black p-1 opacity-60">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-4 w-4 animate-ping rounded-full bg-white"></div>
+                  <div className="text-2xl text-white">
+                    통역 전사문을 불러오는 중입니다.
+                  </div>
+                </div>
+              </div>
+            )}
+            <section aria-label="origin-text" className="flex flex-col">
+              <h3 className="flex items-center justify-between gap-2">원문</h3>
+              <Highlightable
+                className="flex-grow"
+                text={assignment.textFile}
+                highlightedRegions={highlightedRegions.filter(
+                  ({ selectedSourceText }) => selectedSourceText
+                )}
+                onSelect={handleSelectFactory(true)}
+              />
+            </section>
+            <section aria-label="target-text" className="flex flex-col">
+              {assignment.assignmentType === "TRANSLATION" ? (
+                <h3>번역문</h3>
+              ) : (
+                <h3>통역 전사문</h3>
               )}
-              onSelect={handleSelectFactory(false)}
-            />
-          </article>
-        </section>
-        <section className="flex min-h-0 flex-col">
+              <Highlightable
+                className="flex-grow"
+                text={submission.textFile}
+                highlightedRegions={highlightedRegions.filter(
+                  ({ selectedSourceText }) => !selectedSourceText
+                )}
+                onSelect={handleSelectFactory(false)}
+              />
+            </section>
+          </section>
+          <section aria-label="general-review">
+            <form
+              className="flex flex-col gap-1"
+              onSubmit={handleSubmit(async ({ generalReview }) => {
+                dispatch({
+                  type: "SET_GENERAL_REVIEW",
+                  payload: generalReview,
+                });
+                try {
+                  await submissionService.patchOne(submission.id, {
+                    generalReview,
+                  });
+                  toast.success("총평을 저장하였습니다");
+                  reset({ generalReview });
+                } catch (error) {
+                  if (error instanceof Error) toast.error(error.message);
+                }
+              })}
+            >
+              <h3>총평</h3>
+              <textarea
+                className="w-full resize-none"
+                placeholder="총평을 입력하세요."
+                rows={3}
+                {...register("generalReview")}
+              ></textarea>
+              <button
+                type="submit"
+                className="btn self-end bg-primary text-white"
+                disabled={!isDirty || isSubmitting}
+              >
+                {isDirty ? "저장" : "저장됨"}
+              </button>
+            </form>
+          </section>
+        </div>
+        <section
+          aria-label="feedbacks"
+          className="hidden-scrollbar min-h-0 overflow-auto"
+        >
           <h3>피드백</h3>
-          <ul
-            className="hidden-scrollbar flex flex-col gap-2 overflow-auto"
-            ref={feedbackListRef}
-          >
+          <ul className="flex flex-col gap-2" ref={feedbackListRef}>
             {feedbacks.map((feedback) => (
               <FeedbackCard
                 key={feedback.id}
@@ -364,46 +406,29 @@ function SubmissionWithFeedback({
             </li>
           </ul>
         </section>
-        <form
-          className="flex flex-col gap-1"
-          onSubmit={handleSubmit(async ({ generalReview }) => {
-            dispatch({ type: "SET_GENERAL_REVIEW", payload: generalReview });
-            try {
-              await submissionService.patchOne(submission.id, {
-                generalReview,
+        <section aria-label="feedback-statistics">
+          <FeedbackCategoryChart
+            categories={assignment.feedbackCategories}
+            data={feedbacks.reduce<Record<number, number>>((result, f) => {
+              f.categories.forEach((c) => {
+                result[c.id] = c.id in result ? result[c.id] + 1 : 1;
               });
-              toast.success("총평을 저장하였습니다");
-              reset({ generalReview });
-            } catch (error) {
-              if (error instanceof Error) toast.error(error.message);
-            }
-          })}
-        >
-          <h3>총평</h3>
-          <textarea
-            className="w-full resize-none"
-            placeholder="총평을 입력하세요."
-            rows={6}
-            {...register("generalReview")}
-          ></textarea>
-          <button
-            type="submit"
-            className="btn self-end bg-primary text-white"
-            disabled={!isDirty || isSubmitting}
-          >
-            {isDirty ? "저장" : "저장됨"}
-          </button>
-        </form>
-        <FeedbackCategoryChart
-          categories={assignment.feedbackCategories}
-          data={feedbacks.reduce<Record<number, number>>((result, f) => {
-            f.categories.forEach((c) => {
-              result[c.id] = c.id in result ? result[c.id] + 1 : 1;
-            });
-            return result;
-          }, {})}
-        />
-      </section>
+              return result;
+            }, {})}
+          />
+        </section>
+      </div>
+
+      {/* <section className="grid grid-cols-[1fr_22rem] grid-rows-[1fr_auto] gap-2">
+        <section className="relative grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
+          <article className="flex flex-col">
+          </article>
+          <article className="flex flex-col">
+          </article>
+        </section>
+        <section className="flex min-h-0 flex-col">
+        </section>
+      </section> */}
     </main>
   );
 }

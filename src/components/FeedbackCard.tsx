@@ -107,7 +107,7 @@ function FeedbackCard({
             label=""
             placeholder="코멘트를 입력하세요"
             innerClassName="resize-none"
-            rows={3}
+            rows={1}
             {...register("comment")}
           ></TextArea>
           {isDirty && (
