@@ -36,12 +36,14 @@ function SurferPlayer({
           })) || [],
       }),
     ],
-    height: 30,
+    height: 40,
+    normalize: true,
+    scrollParent: true,
   });
 
   return (
     <>
-      <div className="flex h-[30px] gap-2">
+      <div className="flex h-[40px] gap-2">
         <div
           ref={waveSurfer.refCallback}
           className="max-h-full flex-grow"
