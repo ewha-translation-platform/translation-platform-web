@@ -124,6 +124,7 @@ function Submission({ assignment }: SubmissionProps) {
     <main className="flex max-w-5xl flex-col gap-2 overflow-auto p-4">
       <h2>과제 제출</h2>
       <h3>키워드: {assignment.keywords}</h3>
+      <p className="font-semibold underline">반드시 임시저장 후 제출하세요.</p>
       {assignment.assignmentType === "TRANSLATION" ? (
         <section className="grid flex-grow grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-2">
           <TextArea

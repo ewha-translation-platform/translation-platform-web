@@ -82,16 +82,6 @@ function SimultaneousSubmission({
           </button>
         )}
       </section>
-      <label className="flex items-center gap-4">
-        개발용:
-        <input
-          type="file"
-          onChange={(e) => {
-            if (e.target.files) handleSubmssionAudioChange(e.target.files[0]);
-          }}
-          accept="audio/*"
-        />
-      </label>
     </>
   );
 }
