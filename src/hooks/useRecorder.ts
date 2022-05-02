@@ -15,7 +15,9 @@ function useRecorder(handleSave: (data: Blob, regions: Region[]) => void) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      recorder.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      recorder.current = new MediaRecorder(stream, {
+        mimeType: "audio/webm;codecs=opus",
+      });
 
       recorder.current.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -25,7 +27,7 @@ function useRecorder(handleSave: (data: Blob, regions: Region[]) => void) {
 
       recorder.current.onstop = (e) => {
         handleSave(
-          new Blob(records.current),
+          new Blob(records.current, { type: "audio/webm;codecs=opus" }),
           durations.current.reduce<Region[]>(
             (acc, dur) =>
               acc.length === 0
