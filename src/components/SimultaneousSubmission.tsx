@@ -83,7 +83,7 @@ function SimultaneousSubmission({
         )}
       </section>
       <label className="flex items-center gap-4">
-        개발용:
+        파일 업로드:
         <input
           type="file"
           onChange={(e) => {
