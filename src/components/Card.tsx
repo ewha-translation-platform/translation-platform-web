@@ -18,7 +18,7 @@ function Card({ title, subtitle, description, actions, ...props }: CardProps) {
         {subtitle && <p className="font-light">{subtitle}</p>}
         <h3 className="font-semibold">{title}</h3>
       </section>
-      {description && <p>{description}</p>}
+      {description && <p className="truncate">{description}</p>}
       {actions && (
         <section className="flex flex-grow items-end justify-end gap-1">
           {actions}

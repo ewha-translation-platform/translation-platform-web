@@ -77,7 +77,10 @@ function SimultaneousSubmission({
             </button>
           ))}
         {done && (
-          <button onClick={() => submissionSurfer.surfer.current?.playPause()}>
+          <button
+            className="btn bg-primary text-white"
+            onClick={() => submissionSurfer.surfer.current?.playPause()}
+          >
             재생/일시정지
           </button>
         )}

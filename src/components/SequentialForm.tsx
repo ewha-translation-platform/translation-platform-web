@@ -64,6 +64,9 @@ function SequentialForm({
       <section className="flex flex-col gap-2">
         {audioFile.size > 0 ? (
           <>
+            <p className="font-semibold underline">
+              드래그하여 구간을 설정하세요.
+            </p>
             <span>
               원음:
               {duration && (
