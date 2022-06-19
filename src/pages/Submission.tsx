@@ -4,7 +4,7 @@ import { UserContext } from "@/contexts";
 import { assignmentService, submissionService } from "@/services";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loading from "./Loading";
 
@@ -28,6 +28,7 @@ interface SubmissionProps {
 function Submission({ assignment }: SubmissionProps) {
   const { user } = useContext(UserContext);
   const [disabled, setDisabled] = useState(false);
+  const navigate = useNavigate();
   const [submissionAudio, setSubmissionAudio] = useState<Blob | null>(null);
   const [submissionRegions, setSubmissionRegions] = useState<Region[] | null>(
     []
@@ -110,6 +111,7 @@ function Submission({ assignment }: SubmissionProps) {
         .then(() => {
           toast.success("과제를 제출했습니다.");
           setDisabled(false);
+          navigate(-1);
         })
         .catch((err) => toast.error(err.message));
     }

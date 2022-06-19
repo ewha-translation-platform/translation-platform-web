@@ -186,7 +186,12 @@ function AssignmentForm() {
                 label="다시 듣기 제한"
                 required
                 {...register("maxPlayCount")}
-                options={[{ label: "무제한", value: "0" }]}
+                options={[
+                  { label: "무제한", value: "0" },
+                  // { label: "1회", value: "1" },
+                  // { label: "2회", value: "2" },
+                  // { label: "3회", value: "3" },
+                ]}
               />
               <InputField
                 label="재생 속도"
@@ -237,15 +242,20 @@ function AssignmentForm() {
           >
             뒤로가기
           </button>
-          <button className="btn ml-auto bg-primary text-white" disabled>
+          {/* <button className="btn ml-auto bg-primary text-white" disabled>
             미리보기
-          </button>
-          <input
+          </button> */}
+          <button
             type="submit"
             value="확인"
-            className="btn justify-self-end bg-primary text-white hover:opacity-70"
+            className="btn ml-auto justify-self-end bg-primary text-white hover:opacity-70"
             disabled={isSubmitting || isSubmitSuccessful}
-          />
+            onClick={() => {
+              navigate(-1);
+            }}
+          >
+            확인
+          </button>
         </section>
       </form>
     </main>
