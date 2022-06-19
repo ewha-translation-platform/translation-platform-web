@@ -73,7 +73,7 @@ function SimultaneousSubmission({
               className="btn bg-primary text-white"
               onClick={handleDone}
             >
-              종료
+              통역 종료
             </button>
           ))}
         {done && (
