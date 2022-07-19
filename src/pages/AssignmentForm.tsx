@@ -217,6 +217,8 @@ function AssignmentForm() {
           />
         ) : watchAssignmentType === "SIMULTANEOUS" ? (
           <SimultaneousForm
+            textFile={watchTextFile}
+            onTextFileChange={(t) => setValue("textFile", t)}
             audioFile={audioFile || new Blob([])}
             handleAudioFileChange={(audioFile) => setAudioFile(audioFile)}
           />
@@ -229,6 +231,8 @@ function AssignmentForm() {
           />
         ) : watchAssignmentType === "DEVELOPMENT" ? (
           <SimultaneousForm
+            textFile={watchTextFile}
+            onTextFileChange={(t) => setValue("textFile", t)}
             audioFile={audioFile || new Blob([])}
             handleAudioFileChange={(audioFile) => setAudioFile(audioFile)}
           />

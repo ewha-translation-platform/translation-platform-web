@@ -1,14 +1,21 @@
 import { useForceUpdate, useWaveSurfer } from "@/hooks";
 import getBlobDuration from "get-blob-duration";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, ChangeEvent } from "react";
+import Cheerio from "cheerio";
 import { toast } from "react-toastify";
 import MinimapPlugin from "wavesurfer.js/src/plugin/minimap";
 import RecorderModal from "./RecorderModal";
+import JSZip from "jszip";
+import { TextArea } from "./common";
 
 function SimultaneousForm({
+  textFile,
+  onTextFileChange: handleTextFileChange,
   audioFile,
   handleAudioFileChange,
 }: {
+  textFile: string;
+  onTextFileChange: (arg: string) => void;
   audioFile: Blob;
   handleAudioFileChange: (data: Blob) => void;
 }) {
@@ -35,9 +42,50 @@ function SimultaneousForm({
     toast.success("저장되었습니다.");
   };
 
+  const handleFileInput = useCallback(
+    ({ target: { files } }: ChangeEvent<HTMLInputElement>) => {
+      if (files === null) return;
+      const file = files[0];
+      if (file.name.match(/.docx$/)) {
+        JSZip.loadAsync(file)
+          .then((zip) => zip.file("word/document.xml")!.async("string"))
+          .then((xml) =>
+            Cheerio.load(xml, {
+              normalizeWhitespace: true,
+              xmlMode: true,
+            })
+          )
+          .then(($) => {
+            const out: string[] = [];
+            $("w\\:t").each((_, el) => {
+              out.push($(el).text());
+            });
+            handleTextFileChange(out.join());
+          });
+      } else {
+        const reader = new FileReader();
+        reader.addEventListener("load", ({ target }) => {
+          const content = target?.result as string;
+          handleTextFileChange(content.trim());
+        });
+        reader.readAsText(file);
+      }
+    },
+    [handleTextFileChange]
+  );
+
   return (
     <>
       <section className="flex flex-col gap-2">
+        <TextArea
+          label="원문"
+          className="flex-grow"
+          innerClassName="resize-none h-full"
+          value={textFile}
+          onChange={(e) => handleTextFileChange(e.target.value)}
+        ></TextArea>
+        <input type="file" accept=".txt,.docx" onChange={handleFileInput} />
+        원음 // 원음을 업로드 해주세요.
         {audioFile.size > 0 ? (
           <>
             <span>
