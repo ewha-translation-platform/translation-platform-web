@@ -221,7 +221,7 @@ function SubmissionWithFeedback({
                   .catch((e) => toast.error(e.message))
                   .finally(() => setLoadingSTT(false));
               }}
-              disabled={loadingSTT}
+              disabled={loadingSTT || user?.role === "STUDENT"}
             >
               기계 피드백 불러오기
             </button>
@@ -242,6 +242,7 @@ function SubmissionWithFeedback({
         <label className="mr-auto flex items-center gap-2">
           <Switch
             checked={submission.graded}
+            disabled={user?.role === "STUDENT"}
             onChange={(graded) => {
               dispatch({ type: "SET_GRADED", payload: graded });
               submissionService
@@ -260,12 +261,12 @@ function SubmissionWithFeedback({
           ></Switch>
           채점 완료로 표시
         </label>
-        <button className="btn bg-primary text-white" disabled>
+        {/* <button className="btn bg-primary text-white" disabled>
           이전 학생
         </button>
         <button className="btn bg-primary text-white" disabled>
           다음 학생
-        </button>
+        </button> */}
       </nav>
       <div className="grid grid-cols-[1fr_22rem] grid-rows-[1fr_auto] gap-2">
         <div className="row-span-full flex flex-col">
@@ -363,6 +364,7 @@ function SubmissionWithFeedback({
                 className="w-full resize-none"
                 placeholder="총평을 입력하세요."
                 rows={3}
+                readOnly={user?.role === "STUDENT"}
                 {...register("generalReview")}
               ></textarea>
               <button

@@ -122,6 +122,20 @@ function Submission({ assignment }: SubmissionProps) {
     setIsAudioDirty(true);
   }
 
+  function result() {
+    setDisabled(true);
+    if (submissionId) {
+      // submissionService
+      //   .stage(submissionId + 1)
+      //   .then(() => {
+      setDisabled(false);
+      // navigate(`/assignments/${assignment.id}/submissions`);
+      navigate(`/submissions/${[submissionId + 1]}`);
+      // })
+      // .catch((err) => toast.error("과제를 먼저 제출해주세요."));
+    }
+  }
+
   return (
     <main className="flex max-w-5xl flex-col gap-2 overflow-auto p-4">
       <h2>과제 제출</h2>
@@ -160,6 +174,14 @@ function Submission({ assignment }: SubmissionProps) {
         />
       ) : null}
       <section className="flex justify-end gap-2">
+        <button
+          type="button"
+          className="btn bg-primary text-white"
+          disabled={!submissionId || disabled}
+          onClick={result}
+        >
+          피드백 보기
+        </button>
         <button
           className="btn bg-secondary-500 text-white"
           onClick={handleSubmit(onSubmit)}
