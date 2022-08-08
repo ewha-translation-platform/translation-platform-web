@@ -125,6 +125,7 @@ function AssignmentForm() {
         });
       }
       toast.success("저장되었습니다.");
+      navigate(-1);
     } catch (error) {
       toast.error(`오류가 발생했습니다 ${error}`);
     }
@@ -186,6 +187,7 @@ function AssignmentForm() {
                 label="다시 듣기 제한"
                 required
                 {...register("maxPlayCount")}
+                defaultValue={"0"}
                 options={[
                   { label: "무제한", value: "0" },
                   // { label: "1회", value: "1" },
@@ -254,9 +256,10 @@ function AssignmentForm() {
             value="확인"
             className="btn ml-auto justify-self-end bg-primary text-white hover:opacity-70"
             disabled={isSubmitting || isSubmitSuccessful}
-            onClick={() => {
-              navigate(-1);
-            }}
+            // onClick={() => {
+            //   window.location.reload();
+            //   navigate(-1);
+            // }}
           >
             확인
           </button>
