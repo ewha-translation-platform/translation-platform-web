@@ -77,7 +77,9 @@ function Submission({ assignment }: SubmissionProps) {
   }, [assignment.id, reset, user]);
 
   async function onSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
+    setDisabled(true);
     try {
+      const toastId = toast.loading("Loading...");
       if (!submissionId) {
         const submission = await submissionService.postOne({
           ...data,
@@ -96,8 +98,10 @@ function Submission({ assignment }: SubmissionProps) {
           staged: false,
         });
       }
+      toast.dismiss(toastId);
       toast.success("임시저장되었습니다.");
       reset(data);
+      setDisabled(false);
     } catch (e) {
       toast.error(`에러가 발생하였습니다. ${e}`);
     }
@@ -105,10 +109,12 @@ function Submission({ assignment }: SubmissionProps) {
 
   function stageSubmission() {
     setDisabled(true);
+    const toastId = toast.loading("Loading...");
     if (submissionId) {
       submissionService
         .stage(submissionId)
         .then(() => {
+          toast.dismiss(toastId);
           toast.success("과제를 제출했습니다.");
           setDisabled(false);
           navigate(-1);
@@ -183,9 +189,9 @@ function Submission({ assignment }: SubmissionProps) {
           피드백 보기
         </button>
         <button
-          className="btn bg-secondary-500 text-white"
-          onClick={handleSubmit(onSubmit)}
-          disabled={!(isDirty || isAudioDirty)}
+          className="btn bg-primary text-white"
+          onClick={handleSubmit(<Loading /> && onSubmit)}
+          disabled={!(isDirty || isAudioDirty) || disabled}
         >
           임시저장
         </button>
