@@ -190,7 +190,7 @@ function Submission({ assignment }: SubmissionProps) {
         </button>
         <button
           className="btn bg-primary text-white"
-          onClick={handleSubmit(<Loading /> && onSubmit)}
+          onClick={handleSubmit(onSubmit)}
           disabled={!(isDirty || isAudioDirty) || disabled}
         >
           임시저장
