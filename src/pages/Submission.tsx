@@ -78,8 +78,8 @@ function Submission({ assignment }: SubmissionProps) {
 
   async function onSubmit(data: Omit<CreateSubmissionDto, "audioFile">) {
     setDisabled(true);
+    const toastId = toast.loading("Loading...");
     try {
-      const toastId = toast.loading("Loading...");
       if (!submissionId) {
         const submission = await submissionService.postOne({
           ...data,
@@ -104,6 +104,7 @@ function Submission({ assignment }: SubmissionProps) {
       setDisabled(false);
     } catch (e) {
       toast.error(`에러가 발생하였습니다. ${e}`);
+      toast.dismiss(toastId);
     }
   }
 
